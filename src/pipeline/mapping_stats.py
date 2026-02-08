@@ -2,7 +2,6 @@
 
 import os
 import subprocess
-from pathlib import Path
 from typing import Callable
 
 
@@ -77,9 +76,7 @@ def compute_region_overlap(
     )
     region_cov = int(result.stdout.strip())
 
-    overlap_file = os.path.join(
-        output_dir, f"{bam_name}.regions.OverlapStats.txt"
-    )
+    overlap_file = os.path.join(output_dir, f"{bam_name}.regions.OverlapStats.txt")
     with open(overlap_file, "w") as f:
         f.write("GenomicMapping\tRegionsOverllaped\tRatio\n")
         if bam_cov > 0:

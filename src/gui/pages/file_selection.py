@@ -1,7 +1,6 @@
 """File selection page with auto-detection."""
 
 import os
-from typing import List, Tuple
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
@@ -96,9 +95,7 @@ class FileSelectionPage(QWidget):
 
         if file_type == FileType.UNKNOWN:
             self.detection_label.setText("No supported files detected")
-            self.detection_label.setStyleSheet(
-                "color: #d32f2f; font-weight: bold;"
-            )
+            self.detection_label.setStyleSheet("color: #d32f2f; font-weight: bold;")
             self.file_count_label.setText("")
             self.next_btn.setEnabled(False)
             QMessageBox.warning(
@@ -113,12 +110,8 @@ class FileSelectionPage(QWidget):
                 FileType.BAM_ALIGNED: "BAM Files (Aligned)",
                 FileType.BAM_UNALIGNED: "BAM Files (Unaligned)",
             }
-            self.detection_label.setText(
-                f"Detected: {file_type_names[file_type]}"
-            )
-            self.detection_label.setStyleSheet(
-                "color: #388e3c; font-weight: bold;"
-            )
+            self.detection_label.setText(f"Detected: {file_type_names[file_type]}")
+            self.detection_label.setStyleSheet("color: #388e3c; font-weight: bold;")
             self.file_count_label.setText(f"{len(detected_files)} files found")
             self.next_btn.setEnabled(True)
             self.files_detected.emit(file_type, detected_files)

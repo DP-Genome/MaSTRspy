@@ -35,9 +35,7 @@ def generate_summaries(
 
     for barcode_name in barcode_dirs:
         barcode_path = os.path.join(counting_dir, barcode_name)
-        _generate_barcode_summary(
-            barcode_path, barcode_name, summaries_dir, log
-        )
+        _generate_barcode_summary(barcode_path, barcode_name, summaries_dir, log)
         _generate_barcode_profile(
             barcode_path, barcode_name, summaries_dir, norm_cutoff, overrides, log
         )
@@ -59,9 +57,7 @@ def _generate_barcode_summary(
         out.write("Barcode\tLocus\tCE_Number\tMotif\tRawCounts\tNormalizedCounts\n")
 
         allele_files = sorted(
-            f
-            for f in os.listdir(barcode_path)
-            if f.endswith("_Allele_freqs.txt")
+            f for f in os.listdir(barcode_path) if f.endswith("_Allele_freqs.txt")
         )
 
         for fname in allele_files:
@@ -115,9 +111,7 @@ def _generate_barcode_profile(
         )
 
         allele_files = sorted(
-            f
-            for f in os.listdir(barcode_path)
-            if f.endswith("_Allele_freqs.txt")
+            f for f in os.listdir(barcode_path) if f.endswith("_Allele_freqs.txt")
         )
 
         for fname in allele_files:

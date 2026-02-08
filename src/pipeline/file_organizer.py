@@ -30,18 +30,14 @@ def organize_by_barcode(
     # 1. Remove Toptwo.txt files
     log("Removing files ending with 'Toptwo.txt'...")
     for f in os.listdir(counting_dir):
-        if f.endswith("Toptwo.txt") and os.path.isfile(
-            os.path.join(counting_dir, f)
-        ):
+        if f.endswith("Toptwo.txt") and os.path.isfile(os.path.join(counting_dir, f)):
             os.remove(os.path.join(counting_dir, f))
     log("Cleanup complete.")
 
     # 2. Create barcode directories
     log(f"Creating directories from barcode01 to barcode{num_barcodes:02d}...")
     for i in range(1, num_barcodes + 1):
-        os.makedirs(
-            os.path.join(counting_dir, f"barcode{i:02d}"), exist_ok=True
-        )
+        os.makedirs(os.path.join(counting_dir, f"barcode{i:02d}"), exist_ok=True)
     os.makedirs(os.path.join(counting_dir, "unclassified"), exist_ok=True)
     log("Directories are ready.")
 
@@ -69,8 +65,6 @@ def organize_by_barcode(
             continue
         if "unclassified" in fname and fname.endswith(".txt"):
             log(f"Moving '{fname}' -> 'unclassified/'")
-            shutil.move(
-                fpath, os.path.join(counting_dir, "unclassified", fname)
-            )
+            shutil.move(fpath, os.path.join(counting_dir, "unclassified", fname))
     log("Unclassified files sorted.")
     log("--- All files have been sorted. ---")

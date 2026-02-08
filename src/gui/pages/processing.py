@@ -1,6 +1,6 @@
 """Processing page with live log and pipeline stage indicators."""
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QGroupBox,
@@ -25,9 +25,7 @@ class ProcessingPage(QWidget):
         layout.addSpacing(20)
 
         self.processing_status = QLabel("Initializing workflow...")
-        self.processing_status.setFont(
-            QFont("Segoe UI", 14, QFont.Weight.Bold)
-        )
+        self.processing_status.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
         self.processing_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.processing_status)
 

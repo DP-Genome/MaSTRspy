@@ -1,7 +1,6 @@
 """Dorado basecaller quality score (qs tag) filters for BAM and FASTQ."""
 
 import re
-import sys
 from typing import Callable, Dict
 
 import pysam
@@ -44,19 +43,10 @@ def filter_bam_by_qs(
     out.close()
 
     if not tag_found and no_tag_count > 0:
-        log(
-            "[WARNING] Dorado 'qs' tag not found in any reads. "
-            "Filter not applied."
-        )
-        log(
-            f"[dorado_qs_filter] All {passed} reads passed "
-            "(no qs tag available)"
-        )
+        log("[WARNING] Dorado 'qs' tag not found in any reads. " "Filter not applied.")
+        log(f"[dorado_qs_filter] All {passed} reads passed " "(no qs tag available)")
     elif no_tag_count > 0:
-        log(
-            f"[WARNING] {no_tag_count} reads missing 'qs' tag "
-            "(passed through)"
-        )
+        log(f"[WARNING] {no_tag_count} reads missing 'qs' tag " "(passed through)")
         log(f"[dorado_qs_filter] Passed: {passed}, Filtered: {filtered}")
     else:
         log(f"[dorado_qs_filter] Passed: {passed}, Filtered: {filtered}")
@@ -130,14 +120,8 @@ def filter_fastq_by_qs(
             f"[WARNING] {no_tag_count} reads missing 'qs' tag in header "
             "(passed through)"
         )
-        log(
-            f"[dorado_qs_filter_fastq] Passed: {passed}, "
-            f"Filtered: {filtered}"
-        )
+        log(f"[dorado_qs_filter_fastq] Passed: {passed}, " f"Filtered: {filtered}")
     else:
-        log(
-            f"[dorado_qs_filter_fastq] Passed: {passed}, "
-            f"Filtered: {filtered}"
-        )
+        log(f"[dorado_qs_filter_fastq] Passed: {passed}, " f"Filtered: {filtered}")
 
     return {"passed": passed, "filtered": filtered, "no_tag_count": no_tag_count}

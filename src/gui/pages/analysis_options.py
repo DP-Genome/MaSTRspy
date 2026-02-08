@@ -41,9 +41,7 @@ class AnalysisOptionsPage(QWidget):
 
         ref_path_layout = QHBoxLayout()
         self.ref_genome_edit = QLineEdit()
-        self.ref_genome_edit.setPlaceholderText(
-            "Select reference genome .mmi file..."
-        )
+        self.ref_genome_edit.setPlaceholderText("Select reference genome .mmi file...")
         self.ref_genome_edit.setReadOnly(True)
         ref_path_layout.addWidget(self.ref_genome_edit)
 
@@ -62,17 +60,13 @@ class AnalysisOptionsPage(QWidget):
         self.norm_cutoff_slider = QSlider(Qt.Orientation.Horizontal)
         self.norm_cutoff_slider.setRange(0, 50)
         self.norm_cutoff_slider.setValue(10)
-        self.norm_cutoff_slider.valueChanged.connect(
-            self._update_norm_cutoff_label
-        )
+        self.norm_cutoff_slider.valueChanged.connect(self._update_norm_cutoff_label)
         norm_slider_layout.addWidget(self.norm_cutoff_slider)
         self.norm_cutoff_label = QLabel("0.10")
         norm_slider_layout.addWidget(self.norm_cutoff_label)
 
         norm_layout.addLayout(norm_slider_layout)
-        norm_layout.addWidget(
-            QLabel("Default threshold for filtering top alleles")
-        )
+        norm_layout.addWidget(QLabel("Default threshold for filtering top alleles"))
 
         norm_layout.addSpacing(10)
         overrides_layout = QHBoxLayout()
@@ -88,17 +82,14 @@ class AnalysisOptionsPage(QWidget):
         overrides_layout.addWidget(overrides_browse_btn)
 
         edit_overrides_btn = QPushButton("Edit Overrides...")
-        edit_overrides_btn.setToolTip(
-            "Open table editor for per-locus thresholds"
-        )
+        edit_overrides_btn.setToolTip("Open table editor for per-locus thresholds")
         edit_overrides_btn.clicked.connect(self._open_overrides_editor)
         overrides_layout.addWidget(edit_overrides_btn)
 
         norm_layout.addLayout(overrides_layout)
 
         help_text = QLabel(
-            "Overrides TSV format: <locus><TAB><cutoff>\n"
-            "Example: DYS458<TAB>0.15"
+            "Overrides TSV format: <locus><TAB><cutoff>\n" "Example: DYS458<TAB>0.15"
         )
         help_text.setStyleSheet("color: #666666; font-size: 9pt;")
         norm_layout.addWidget(help_text)

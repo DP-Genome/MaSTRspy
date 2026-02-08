@@ -110,9 +110,7 @@ class FilteringPage(QWidget):
         self.min_dorado_q_label.setText(str(self.min_dorado_q_slider.value()))
         self.min_mean_q_label.setText(str(self.min_mean_q_slider.value()))
         self.min_len_label.setText(str(self.min_len_slider.value()))
-        self.min_acc_label.setText(
-            f"{self.min_acc_slider.value() / 100:.2f}"
-        )
+        self.min_acc_label.setText(f"{self.min_acc_slider.value() / 100:.2f}")
         self.preset_combo.setCurrentText("Custom")
 
     def get_min_dorado_q(self) -> int:

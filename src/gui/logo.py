@@ -14,9 +14,7 @@ class LogoManager:
 
     def create_logo_label(self, logo_type: str, size: int) -> QLabel:
         label = QLabel()
-        path = (
-            self.mastrspy_logo if logo_type == "mastrspy" else self.malslabs_logo
-        )
+        path = self.mastrspy_logo if logo_type == "mastrspy" else self.malslabs_logo
 
         if os.path.exists(path):
             pixmap = QPixmap(path).scaled(

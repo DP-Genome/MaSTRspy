@@ -1,7 +1,5 @@
 """Results/done page with links to open results."""
 
-import subprocess
-import sys
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
@@ -66,9 +64,7 @@ class ResultsPage(QWidget):
         new_analysis_btn = QPushButton("Start New Analysis")
         new_analysis_btn.setObjectName("successButton")
         new_analysis_btn.clicked.connect(self.new_analysis_clicked.emit)
-        layout.addWidget(
-            new_analysis_btn, alignment=Qt.AlignmentFlag.AlignCenter
-        )
+        layout.addWidget(new_analysis_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
     def set_results_info(self, text: str):
         self.results_info.setText(text)

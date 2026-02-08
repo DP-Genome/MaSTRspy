@@ -44,14 +44,11 @@ class LociOverridesDialog(QDialog):
         self.table.horizontalHeader().setSectionResizeMode(
             1, QHeaderView.ResizeMode.ResizeToContents
         )
-        self.table.setSelectionBehavior(
-            QTableWidget.SelectionBehavior.SelectRows
-        )
+        self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         layout.addWidget(self.table)
 
         self.button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok
-            | QDialogButtonBox.StandardButton.Cancel
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
         self.button_box.accepted.connect(self._on_accept)
         self.button_box.rejected.connect(self.reject)
@@ -85,9 +82,7 @@ class LociOverridesDialog(QDialog):
         self.table.setRowCount(len(self._rows))
         for r, (locus, cutoff) in enumerate(self._rows):
             item_locus = QTableWidgetItem(locus)
-            item_locus.setFlags(
-                item_locus.flags() & ~Qt.ItemFlag.ItemIsEditable
-            )
+            item_locus.setFlags(item_locus.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self.table.setItem(r, 0, item_locus)
 
             item_cutoff = QTableWidgetItem(str(cutoff))

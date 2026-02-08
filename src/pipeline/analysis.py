@@ -10,7 +10,7 @@ import tempfile
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any, Callable, Dict
+from typing import Callable
 
 from src.core.config import load_input_config, load_overrides, load_tools_config
 from src.pipeline.file_organizer import organize_by_barcode
@@ -187,9 +187,7 @@ def run_analysis(
     }
 
     # Create parent temp dir
-    parent_temp_dir = tempfile.mkdtemp(
-        prefix="Mastrspy_parallel_temp.", dir=output_dir
-    )
+    parent_temp_dir = tempfile.mkdtemp(prefix="Mastrspy_parallel_temp.", dir=output_dir)
     log(f"Parent temporary directory for all jobs: {parent_temp_dir}")
 
     # Build job list
@@ -201,9 +199,7 @@ def run_analysis(
 
     # Process in parallel
     with ProcessPoolExecutor(max_workers=num_parallel_jobs) as executor:
-        futures = {
-            executor.submit(_process_locus_wrapper, job): job for job in jobs
-        }
+        futures = {executor.submit(_process_locus_wrapper, job): job for job in jobs}
         for future in as_completed(futures):
             try:
                 future.result()

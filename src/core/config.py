@@ -4,7 +4,6 @@ import os
 import re
 from typing import Dict, Optional
 
-
 FILTER_PRESETS = {
     "None": {"min_dorado_q": 0.0, "min_mean_q": 0.0, "min_len": 0, "min_acc": 0.0},
     "Lenient": {
@@ -126,9 +125,7 @@ def generate_input_config(
             new_lines.append(f"NORM_CUTOFF={norm_cutoff}\n")
         if not saw_norm_overrides:
             if norm_cutoff_overrides:
-                new_lines.append(
-                    f'NORM_CUTOFF_OVERRIDES="{norm_cutoff_overrides}"\n'
-                )
+                new_lines.append(f'NORM_CUTOFF_OVERRIDES="{norm_cutoff_overrides}"\n')
             else:
                 new_lines.append("NORM_CUTOFF_OVERRIDES=\n")
 

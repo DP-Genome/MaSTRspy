@@ -86,9 +86,7 @@ class MainWindow(QMainWindow):
         self.filtering_page = FilteringPage(self.logo_manager)
         self.stacked_widget.addWidget(self.filtering_page)  # 4
 
-        self.analysis_page = AnalysisOptionsPage(
-            self.logo_manager, self.project_dir
-        )
+        self.analysis_page = AnalysisOptionsPage(self.logo_manager, self.project_dir)
         self.stacked_widget.addWidget(self.analysis_page)  # 5
 
         self.review_page = ReviewPage(self.logo_manager)
@@ -131,9 +129,7 @@ class MainWindow(QMainWindow):
         )
 
         # Filtering
-        self.filtering_page.back_clicked.connect(
-            self._navigate_back_from_filtering
-        )
+        self.filtering_page.back_clicked.connect(self._navigate_back_from_filtering)
         self.filtering_page.next_clicked.connect(
             lambda: self.stacked_widget.setCurrentIndex(self.PAGE_ANALYSIS)
         )
@@ -159,9 +155,7 @@ class MainWindow(QMainWindow):
         self.file_type = file_type
         self.detected_files = files
         self.workflow_manager = WorkflowManager(file_type)
-        self.status_bar.showMessage(
-            f"Ready: {len(files)} files detected"
-        )
+        self.status_bar.showMessage(f"Ready: {len(files)} files detected")
 
     def _from_experiment_to_options(self):
         self._update_workflow_summary()
@@ -184,9 +178,7 @@ class MainWindow(QMainWindow):
         summary = (
             f"<b>Detected Input:</b> {self.file_type.value.upper()}<br><br>"
             f"<b>Pipeline Stages:</b><br>"
-            + "<br>".join(
-                [f"  {i + 1}. {name}" for i, name in enumerate(stages)]
-            )
+            + "<br>".join([f"  {i + 1}. {name}" for i, name in enumerate(stages)])
         )
         self.experiment_page.set_workflow_summary(summary)
 
@@ -217,12 +209,8 @@ class MainWindow(QMainWindow):
         }
 
         if self.workflow_manager and self.workflow_manager.needs_basecalling():
-            self.workflow_params["model_path"] = (
-                self.basecalling_page.get_model_path()
-            )
-            self.workflow_params["demux_kit"] = (
-                self.basecalling_page.get_demux_kit()
-            )
+            self.workflow_params["model_path"] = self.basecalling_page.get_model_path()
+            self.workflow_params["demux_kit"] = self.basecalling_page.get_demux_kit()
 
         if self.file_type == FileType.FASTQ:
             self.workflow_params["input_type"] = "fastq"
@@ -276,8 +264,7 @@ class MainWindow(QMainWindow):
 
         if p.get("norm_cutoff_overrides"):
             review_text += (
-                f"<b>Per-Locus Overrides:</b> "
-                f"{p['norm_cutoff_overrides']}<br>"
+                f"<b>Per-Locus Overrides:</b> " f"{p['norm_cutoff_overrides']}<br>"
             )
 
         self.review_page.set_review_html(review_text)
@@ -287,19 +274,13 @@ class MainWindow(QMainWindow):
         self.processing_page.reset_stages()
 
         self.worker_thread = QThread()
-        self.worker = FullWorkflowWorker(
-            self.workflow_params, self.project_dir
-        )
+        self.worker = FullWorkflowWorker(self.workflow_params, self.project_dir)
         self.worker.moveToThread(self.worker_thread)
 
         self.worker_thread.started.connect(self.worker.run)
         self.worker.log_message.connect(self.processing_page.append_log)
-        self.worker.stage_started.connect(
-            self.processing_page.on_stage_started
-        )
-        self.worker.stage_complete.connect(
-            self.processing_page.on_stage_complete
-        )
+        self.worker.stage_started.connect(self.processing_page.on_stage_started)
+        self.worker.stage_complete.connect(self.processing_page.on_stage_complete)
         self.worker.finished.connect(self._on_workflow_finished)
         self.worker.finished.connect(self.worker_thread.quit)
         self.worker_thread.finished.connect(self.worker_thread.deleteLater)
@@ -315,15 +296,11 @@ class MainWindow(QMainWindow):
             self.stacked_widget.setCurrentIndex(self.PAGE_RESULTS)
             self.status_bar.showMessage("Workflow completed!")
         else:
-            QMessageBox.critical(
-                self, "Workflow Failed", "Check the log for details."
-            )
+            QMessageBox.critical(self, "Workflow Failed", "Check the log for details.")
             self.status_bar.showMessage("Workflow failed")
 
     def _open_results_viewer(self):
-        if self.current_results_dir and os.path.exists(
-            self.current_results_dir
-        ):
+        if self.current_results_dir and os.path.exists(self.current_results_dir):
             viewer = ResultsViewerDialog(self.current_results_dir, self)
             viewer.exec()
         else:

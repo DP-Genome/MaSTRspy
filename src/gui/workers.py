@@ -58,9 +58,7 @@ class FullWorkflowWorker(QObject):
                         self.finished.emit(1, "")
                         return
                 else:
-                    target = os.path.join(
-                        demux_dir, os.path.basename(basecalled_bam)
-                    )
+                    target = os.path.join(demux_dir, os.path.basename(basecalled_bam))
                     if not os.path.exists(target):
                         os.symlink(basecalled_bam, target)
 
@@ -96,9 +94,7 @@ class FullWorkflowWorker(QObject):
             self.stage_started.emit("Analysis")
             analysis_dir = os.path.join(exp_output_dir, "4_analysis")
 
-            master_config = os.path.join(
-                self.project_dir, "config", "InputConfig.txt"
-            )
+            master_config = os.path.join(self.project_dir, "config", "InputConfig.txt")
             input_config_content = generate_input_config(
                 input_for_analysis, analysis_dir, p, master_config
             )
@@ -109,9 +105,7 @@ class FullWorkflowWorker(QObject):
                 f.write(input_config_content)
                 input_config_path = f.name
 
-            tools_config = os.path.join(
-                self.project_dir, "config", "ToolsConfig.txt"
-            )
+            tools_config = os.path.join(self.project_dir, "config", "ToolsConfig.txt")
 
             try:
                 results_dir = run_analysis(
@@ -137,9 +131,7 @@ class FullWorkflowWorker(QObject):
     ) -> bool:
         """Run an external command stage (basecalling/demux only)."""
         try:
-            log_cmd = " ".join(
-                f'"{arg}"' if " " in arg else arg for arg in command
-            )
+            log_cmd = " ".join(f'"{arg}"' if " " in arg else arg for arg in command)
             self.log_message.emit(f"[CMD] {log_cmd}\n")
 
             if is_basecaller:

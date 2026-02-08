@@ -16,9 +16,9 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QScrollArea,
-    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -96,9 +96,7 @@ class ResultsViewerDialog(QDialog):
         plot_selector_layout = QHBoxLayout()
         plot_selector_layout.addWidget(QLabel("Select Barcode:"))
         self.plot_barcode_combo = QComboBox()
-        self.plot_barcode_combo.currentTextChanged.connect(
-            self._load_barcode_plot
-        )
+        self.plot_barcode_combo.currentTextChanged.connect(self._load_barcode_plot)
         plot_selector_layout.addWidget(self.plot_barcode_combo)
         plot_selector_layout.addStretch()
         plots_layout.addLayout(plot_selector_layout)
@@ -133,14 +131,11 @@ class ResultsViewerDialog(QDialog):
         if not os.path.exists(summaries_dir):
             summaries_dir = os.path.dirname(self.results_dir)
 
-        summary_files = glob.glob(
-            os.path.join(summaries_dir, "*_summary.tsv")
-        )
+        summary_files = glob.glob(os.path.join(summaries_dir, "*_summary.tsv"))
 
         if summary_files:
             barcodes = [
-                os.path.basename(f).replace("_summary.tsv", "")
-                for f in summary_files
+                os.path.basename(f).replace("_summary.tsv", "") for f in summary_files
             ]
             self.barcode_combo.addItems(barcodes)
             self.profile_barcode_combo.addItems(barcodes)
@@ -150,9 +145,7 @@ class ResultsViewerDialog(QDialog):
         if not barcode:
             return
 
-        summary_file = os.path.join(
-            self.results_dir, f"{barcode}_summary.tsv"
-        )
+        summary_file = os.path.join(self.results_dir, f"{barcode}_summary.tsv")
         if not os.path.exists(summary_file):
             return
 
@@ -165,9 +158,7 @@ class ResultsViewerDialog(QDialog):
 
             headers = lines[0].strip().split("\t")
             data_lines = [
-                line.strip().split("\t")
-                for line in lines[1:]
-                if line.strip()
+                line.strip().split("\t") for line in lines[1:] if line.strip()
             ]
 
             self.summary_table.setColumnCount(len(headers))
@@ -184,17 +175,13 @@ class ResultsViewerDialog(QDialog):
             )
 
         except Exception as e:
-            QMessageBox.warning(
-                self, "Error", f"Could not load table: {e}"
-            )
+            QMessageBox.warning(self, "Error", f"Could not load table: {e}")
 
     def _load_barcode_profile(self, barcode: str):
         if not barcode:
             return
 
-        profile_file = os.path.join(
-            self.results_dir, f"{barcode}_Profile.tsv"
-        )
+        profile_file = os.path.join(self.results_dir, f"{barcode}_Profile.tsv")
         if not os.path.exists(profile_file):
             self.profile_table.setRowCount(0)
             self.profile_table.setColumnCount(1)
@@ -215,9 +202,7 @@ class ResultsViewerDialog(QDialog):
 
             headers = lines[0].strip().split("\t")
             data_lines = [
-                line.strip().split("\t")
-                for line in lines[1:]
-                if line.strip()
+                line.strip().split("\t") for line in lines[1:] if line.strip()
             ]
 
             self.profile_table.setColumnCount(len(headers))
@@ -241,9 +226,7 @@ class ResultsViewerDialog(QDialog):
             )
 
         except Exception as e:
-            QMessageBox.warning(
-                self, "Error", f"Could not load profile: {e}"
-            )
+            QMessageBox.warning(self, "Error", f"Could not load profile: {e}")
 
     def _load_barcode_plot(self, barcode: str):
         if not barcode:
@@ -269,9 +252,7 @@ class ResultsViewerDialog(QDialog):
                 )
                 self.plot_label.setPixmap(scaled_pixmap)
             else:
-                self.plot_label.setText(
-                    f"Could not load plot for {barcode}"
-                )
+                self.plot_label.setText(f"Could not load plot for {barcode}")
         except Exception as e:
             self.plot_label.setText(f"Error loading plot: {e}")
 

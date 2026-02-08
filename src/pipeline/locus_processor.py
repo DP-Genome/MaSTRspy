@@ -4,7 +4,6 @@ Replaces process_locus_for_sample() from MaSTRspy_Analysis_P1.0.sh.
 """
 
 import os
-import re
 import subprocess
 import tempfile
 from typing import Callable, Dict, Optional
@@ -179,9 +178,7 @@ def process_locus(
         f"(Normalized count >= {effective_norm_cutoff})..."
     )
 
-    toptwo_file = os.path.join(
-        counting_dir, f"{bed_fname}_{bam_name}_Toptwo.txt"
-    )
+    toptwo_file = os.path.join(counting_dir, f"{bed_fname}_{bam_name}_Toptwo.txt")
 
     # Extract top two alleles above cutoff
     top_alleles = []

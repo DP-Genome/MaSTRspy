@@ -8,7 +8,7 @@ import re
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict
 
 from src.filters.bam_accuracy import filter_bam_by_accuracy
 from src.filters.dorado_qs import filter_bam_by_qs, filter_fastq_by_qs
@@ -120,9 +120,7 @@ def run_prepping(params: Dict[str, Any], log: Callable[[str], None] = print) -> 
         log("")
         log(f"--- Processing: {file_basename} -> {barcode_name} ---")
 
-        qs_filtered_bam = os.path.join(
-            output_dir, f"{barcode_name}_qs_filtered.bam"
-        )
+        qs_filtered_bam = os.path.join(output_dir, f"{barcode_name}_qs_filtered.bam")
         aligned_bam = os.path.join(output_dir, f"{barcode_name}_aligned.bam")
         final_bam = os.path.join(output_dir, f"{barcode_name}_prepped.bam")
 
@@ -203,11 +201,14 @@ def _process_bam_input(
             f"(min-mean-q={min_mean_q}, min-len={min_len})"
         )
         # BAM -> FASTQ -> filter -> align -> sort
-        with tempfile.NamedTemporaryFile(
-            suffix=".fastq", dir=output_dir, delete=False
-        ) as tmp_fq, tempfile.NamedTemporaryFile(
-            suffix=".fastq", dir=output_dir, delete=False
-        ) as tmp_filtered:
+        with (
+            tempfile.NamedTemporaryFile(
+                suffix=".fastq", dir=output_dir, delete=False
+            ) as tmp_fq,
+            tempfile.NamedTemporaryFile(
+                suffix=".fastq", dir=output_dir, delete=False
+            ) as tmp_filtered,
+        ):
             tmp_fq_path = tmp_fq.name
             tmp_filtered_path = tmp_filtered.name
 
@@ -287,11 +288,14 @@ def _process_fastq_input(
         # Need intermediate filtered FASTQ files
         current_path = input_file
 
-        with tempfile.NamedTemporaryFile(
-            suffix=".fastq", dir=output_dir, delete=False
-        ) as tmp1, tempfile.NamedTemporaryFile(
-            suffix=".fastq", dir=output_dir, delete=False
-        ) as tmp2:
+        with (
+            tempfile.NamedTemporaryFile(
+                suffix=".fastq", dir=output_dir, delete=False
+            ) as tmp1,
+            tempfile.NamedTemporaryFile(
+                suffix=".fastq", dir=output_dir, delete=False
+            ) as tmp2,
+        ):
             tmp1_path = tmp1.name
             tmp2_path = tmp2.name
 

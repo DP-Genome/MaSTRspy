@@ -38,9 +38,7 @@ class BasecallingPage(QWidget):
 
         model_path_layout = QHBoxLayout()
         self.model_path_edit = QLineEdit()
-        self.model_path_edit.setPlaceholderText(
-            "Select Dorado model directory..."
-        )
+        self.model_path_edit.setPlaceholderText("Select Dorado model directory...")
         self.model_path_edit.setReadOnly(True)
         model_path_layout.addWidget(self.model_path_edit)
 
