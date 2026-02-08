@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QStatusBar,
 )
 
+from src.core.config import compute_thread_split
 from src.core.file_detector import FileType
 from src.core.workflow import WorkflowManager
 from src.gui.dialogs.results_viewer import ResultsViewerDialog
@@ -201,6 +202,8 @@ class MainWindow(QMainWindow):
             "min_acc": self.filtering_page.get_min_acc(),
             "norm_cutoff": self.analysis_page.get_norm_cutoff(),
             "norm_cutoff_overrides": self.analysis_page.get_overrides_path(),
+            "num_threads": self.analysis_page.get_num_threads(),
+            "enable_snv": self.analysis_page.get_enable_snv(),
             "needs_prepping": (
                 self.workflow_manager.needs_prepping()
                 if self.workflow_manager
@@ -257,15 +260,26 @@ class MainWindow(QMainWindow):
 <b>Min Accuracy:</b> {p['min_acc']:.2f}<br>
 """
 
+        snv_status = "Enabled" if p.get("enable_snv") else "Disabled"
         review_text += f"""
 <h3>Analysis</h3>
 <b>Norm Cutoff:</b> {p['norm_cutoff']:.2f}<br>
+<b>SNV Calling (xatlas):</b> {snv_status}<br>
 """
 
         if p.get("norm_cutoff_overrides"):
             review_text += (
                 f"<b>Per-Locus Overrides:</b> " f"{p['norm_cutoff_overrides']}<br>"
             )
+
+        total_threads = p.get("num_threads", 16)
+        jobs, tpj = compute_thread_split(total_threads)
+        review_text += f"""
+<h3>Performance</h3>
+<b>Total Threads:</b> {total_threads}<br>
+<b>Parallel Jobs:</b> {jobs}<br>
+<b>Threads per Job:</b> {tpj}<br>
+"""
 
         self.review_page.set_review_html(review_text)
 

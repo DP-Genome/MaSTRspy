@@ -50,12 +50,12 @@ class TestToolCheckResult:
     def test_multiple_missing_tools(self):
         result = ToolCheckResult(
             available={},
-            missing=["samtools", "bedtools", "minimap2", "xatlas"],
-            optional_missing=["dorado", "Rscript"],
+            missing=["samtools", "bedtools", "minimap2"],
+            optional_missing=["xatlas", "dorado", "Rscript"],
         )
         assert result.all_required_available is False
-        assert len(result.missing) == 4
-        assert len(result.optional_missing) == 2
+        assert len(result.missing) == 3
+        assert len(result.optional_missing) == 3
 
 
 class TestCheckTool:
@@ -204,6 +204,7 @@ class TestCheckToolsConfig:
         assert "samtools" in call_args
         assert "bedtools" in call_args
         assert "minimap2" in call_args
+        # xatlas is now optional, but still checked
         assert "xatlas" in call_args
 
 
@@ -222,17 +223,17 @@ class TestRunPreflightCheck:
     def test_raises_with_missing_tool_names_in_message(self, mock_check):
         mock_check.return_value = ToolCheckResult(
             available={},
-            missing=["xatlas"],
+            missing=["bedtools"],
             optional_missing=[],
         )
-        with pytest.raises(RuntimeError, match="xatlas"):
+        with pytest.raises(RuntimeError, match="bedtools"):
             run_preflight_check({})
 
     @patch("src.core.tool_check.check_tools_config")
     def test_passes_when_all_available(self, mock_check):
         mock_check.return_value = ToolCheckResult(
             available={"samtools": "1.18", "bedtools": "2.31",
-                       "minimap2": "2.26", "xatlas": "0.3"},
+                       "minimap2": "2.26"},
             missing=[],
             optional_missing=[],
         )
@@ -255,7 +256,7 @@ class TestRunPreflightCheck:
     def test_logs_optional_missing(self, mock_check):
         mock_check.return_value = ToolCheckResult(
             available={"samtools": "1.18", "bedtools": "2.31",
-                       "minimap2": "2.26", "xatlas": "0.3"},
+                       "minimap2": "2.26"},
             missing=[],
             optional_missing=["dorado"],
         )
@@ -305,9 +306,9 @@ class TestRunPreflightCheck:
     def test_returns_result_on_success(self, mock_check):
         expected = ToolCheckResult(
             available={"samtools": "1.18", "bedtools": "2.31",
-                       "minimap2": "2.26", "xatlas": "0.3"},
+                       "minimap2": "2.26"},
             missing=[],
-            optional_missing=["dorado"],
+            optional_missing=["xatlas", "dorado"],
         )
         mock_check.return_value = expected
         result = run_preflight_check({})
