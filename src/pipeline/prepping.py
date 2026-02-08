@@ -214,12 +214,13 @@ def _process_bam_input(
 
         try:
             # samtools fastq
-            subprocess.run(
-                ["samtools", "fastq", "-@4", current_input],
-                stdout=open(tmp_fq_path, "w"),
-                stderr=subprocess.DEVNULL,
-                check=True,
-            )
+            with open(tmp_fq_path, "w") as fq_out:
+                subprocess.run(
+                    ["samtools", "fastq", "-@4", current_input],
+                    stdout=fq_out,
+                    stderr=subprocess.DEVNULL,
+                    check=True,
+                )
             # fastq filter
             filter_fastq(tmp_fq_path, tmp_filtered_path, min_mean_q, min_len, log)
             # minimap2 | samtools sort

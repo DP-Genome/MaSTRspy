@@ -66,7 +66,7 @@ def process_locus(
 
     # Step 1: Intersect regions and create FASTQ
     log("## Step 1/5: Intersecting reads from STR region...")
-    with open(intersected_bam, "w") as out:
+    with open(intersected_bam, "wb") as out:
         subprocess.run(
             [bedtools, "intersect", "-a", sample_bam, "-b", str_bed],
             stdout=out,

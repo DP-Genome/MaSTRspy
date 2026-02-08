@@ -5,6 +5,7 @@ file_organizer, summary_generator, and R plots.
 """
 
 import os
+import shutil
 import subprocess
 import tempfile
 import time
@@ -208,8 +209,6 @@ def run_analysis(
                 log(f"[ERROR] Failed processing {job[0]} x {job[1]}: {e}")
 
     # Clean up temp dir
-    import shutil
-
     shutil.rmtree(parent_temp_dir, ignore_errors=True)
 
     # File organization

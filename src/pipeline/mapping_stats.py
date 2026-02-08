@@ -33,7 +33,7 @@ def compute_mapping_stats(
 
     stats_file = os.path.join(output_dir, f"{bam_name}_MappingStats.txt")
     with open(stats_file, "w") as f:
-        f.write("TotalReads\tIntersectMappedReads(Ratio)\tUnmapedReads(Ration)\n")
+        f.write("TotalReads\tIntersectMappedReads(Ratio)\tUnmappedReads(Ratio)\n")
         if total > 0:
             mapped_pct = mapped / total * 100
             unmapped_pct = unmapped / total * 100
