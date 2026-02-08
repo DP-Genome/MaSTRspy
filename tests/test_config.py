@@ -7,6 +7,7 @@ import pytest
 from src.core.config import (
     DEMUX_KITS,
     FILTER_PRESETS,
+    compute_thread_split,
     generate_input_config,
     load_input_config,
     load_overrides,
@@ -171,3 +172,52 @@ class TestGenerateInputConfig:
     def test_default_norm_cutoff(self):
         result = generate_input_config("/input", "/output", {})
         assert "NORM_CUTOFF=0.1" in result
+
+    def test_writes_thread_settings_without_master(self):
+        result = generate_input_config(
+            "/input", "/output", {"num_threads": 128}
+        )
+        assert "NUM_PARALLEL_JOBS=8" in result
+        assert "NUM_THREADS=16" in result
+
+    def test_writes_thread_settings_with_master(self, sample_input_config):
+        # Add thread lines to the sample config
+        with open(sample_input_config, "a") as f:
+            f.write("NUM_PARALLEL_JOBS=8\n")
+            f.write("NUM_THREADS=16\n")
+        result = generate_input_config(
+            "/input", "/output", {"num_threads": 32},
+            master_config_path=sample_input_config,
+        )
+        assert "NUM_PARALLEL_JOBS=2" in result
+        assert "NUM_THREADS=16" in result
+
+    def test_appends_thread_settings_when_missing_from_master(self, sample_input_config):
+        result = generate_input_config(
+            "/input", "/output", {"num_threads": 64},
+            master_config_path=sample_input_config,
+        )
+        assert "NUM_PARALLEL_JOBS=8" in result
+        assert "NUM_THREADS=8" in result
+
+
+class TestComputeThreadSplit:
+    def test_128_threads(self):
+        assert compute_thread_split(128) == (8, 16)
+
+    def test_64_threads(self):
+        assert compute_thread_split(64) == (8, 8)
+
+    def test_32_threads(self):
+        assert compute_thread_split(32) == (2, 16)
+
+    def test_16_threads(self):
+        assert compute_thread_split(16) == (2, 8)
+
+    def test_2_threads(self):
+        assert compute_thread_split(2) == (2, 1)
+
+    def test_1_thread_clamps_to_min(self):
+        jobs, tpj = compute_thread_split(1)
+        assert jobs == 2
+        assert tpj == 1  # max(1, 1 // 2) = max(1, 0) = 1

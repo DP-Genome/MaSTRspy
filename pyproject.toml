@@ -27,7 +27,7 @@ dev = [
 ]
 
 [project.scripts]
-mastrspy = "main:main"
+MaSTRspy = "main:main"
 
 
 [tool.hatch.build.targets.wheel]

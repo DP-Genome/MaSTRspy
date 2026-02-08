@@ -36,6 +36,20 @@ DEMUX_KITS = [
 ]
 
 
+def compute_thread_split(total_threads: int) -> tuple:
+    """Split a total thread count into (parallel_jobs, threads_per_job).
+
+    >= 64 threads: 8 parallel jobs
+    <  64 threads: 2 parallel jobs
+    """
+    if total_threads >= 64:
+        jobs = 8
+    else:
+        jobs = 2
+    threads_per_job = max(1, total_threads // jobs)
+    return jobs, threads_per_job
+
+
 def load_input_config(path: str) -> Dict[str, str]:
     """Parse a KEY=value config file (shell-style), ignoring comments."""
     config = {}
@@ -91,6 +105,8 @@ def generate_input_config(
     """Generate an InputConfig.txt content string with updated paths and params."""
     norm_cutoff = params.get("norm_cutoff", 0.10)
     norm_cutoff_overrides = params.get("norm_cutoff_overrides", "")
+    total_threads = params.get("num_threads", 16)
+    num_jobs, threads_per_job = compute_thread_split(total_threads)
 
     if master_config_path and os.path.exists(master_config_path):
         with open(master_config_path, "r") as f:
@@ -99,6 +115,8 @@ def generate_input_config(
         new_lines = []
         saw_norm_cutoff = False
         saw_norm_overrides = False
+        saw_num_parallel_jobs = False
+        saw_num_threads = False
 
         for line in lines:
             if re.match(r"^\s*INPUT_DIR=", line):
@@ -118,6 +136,12 @@ def generate_input_config(
                     )
                 else:
                     new_lines.append("NORM_CUTOFF_OVERRIDES=\n")
+            elif re.match(r"^\s*NUM_PARALLEL_JOBS=", line):
+                saw_num_parallel_jobs = True
+                new_lines.append(f"NUM_PARALLEL_JOBS={num_jobs}\n")
+            elif re.match(r"^\s*NUM_THREADS=", line):
+                saw_num_threads = True
+                new_lines.append(f"NUM_THREADS={threads_per_job}\n")
             else:
                 new_lines.append(line)
 
@@ -128,6 +152,10 @@ def generate_input_config(
                 new_lines.append(f'NORM_CUTOFF_OVERRIDES="{norm_cutoff_overrides}"\n')
             else:
                 new_lines.append("NORM_CUTOFF_OVERRIDES=\n")
+        if not saw_num_parallel_jobs:
+            new_lines.append(f"NUM_PARALLEL_JOBS={num_jobs}\n")
+        if not saw_num_threads:
+            new_lines.append(f"NUM_THREADS={threads_per_job}\n")
 
         return "".join(new_lines)
     else:
@@ -136,6 +164,8 @@ def generate_input_config(
             f'OUTPUT_DIR="{output_dir}"\n'
             f'INPUT_BAM="yes"\n'
             f"NORM_CUTOFF={norm_cutoff}\n"
+            f"NUM_PARALLEL_JOBS={num_jobs}\n"
+            f"NUM_THREADS={threads_per_job}\n"
         )
         if norm_cutoff_overrides:
             config_str += f'NORM_CUTOFF_OVERRIDES="{norm_cutoff_overrides}"\n'

@@ -9,5 +9,5 @@ REGION_BED=/home/machine/Desktop/MaSTRp1/MaSTR_DatabaseV5/DBv5.bed
 NORM_CUTOFF=0.1
 NORM_CUTOFF_OVERRIDES=/home/machine/Desktop/MaSTRp1/config/overrides.tsv
 OUTPUT_DIR=/home/maingate/Desktop/q0Processed_analysis
-NUM_PARALLEL_JOBS=8
-NUM_THREADS=16
+NUM_PARALLEL_JOBS=2
+NUM_THREADS=4

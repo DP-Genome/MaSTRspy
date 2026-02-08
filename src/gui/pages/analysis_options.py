@@ -13,10 +13,12 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSlider,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
 
+from src.core.config import compute_thread_split
 from src.gui.dialogs.overrides_editor import LociOverridesDialog
 from src.gui.logo import LogoManager
 
@@ -95,6 +97,30 @@ class AnalysisOptionsPage(QWidget):
         norm_layout.addWidget(help_text)
 
         layout.addWidget(norm_group)
+
+        perf_group = QGroupBox("Performance")
+        perf_layout = QVBoxLayout(perf_group)
+
+        threads_layout = QHBoxLayout()
+        threads_layout.addWidget(QLabel("Total Threads:"))
+        self.threads_spin = QSpinBox()
+        self.threads_spin.setRange(2, 256)
+        self.threads_spin.setValue(os.cpu_count() or 16)
+        self.threads_spin.valueChanged.connect(self._update_thread_split_label)
+        threads_layout.addWidget(self.threads_spin)
+
+        self.thread_split_label = QLabel()
+        threads_layout.addWidget(self.thread_split_label)
+        threads_layout.addStretch()
+
+        perf_layout.addLayout(threads_layout)
+
+        thread_help = QLabel("Controls parallelism for the analysis stage")
+        thread_help.setStyleSheet("color: #666666; font-size: 9pt;")
+        perf_layout.addWidget(thread_help)
+
+        layout.addWidget(perf_group)
+        self._update_thread_split_label()
 
         layout.addStretch()
 
@@ -188,6 +214,16 @@ class AnalysisOptionsPage(QWidget):
 
     def get_overrides_path(self) -> str:
         return self.overrides_path_edit.text().strip()
+
+    def get_num_threads(self) -> int:
+        return self.threads_spin.value()
+
+    def _update_thread_split_label(self):
+        total = self.threads_spin.value()
+        jobs, tpj = compute_thread_split(total)
+        self.thread_split_label.setText(
+            f"\u2192 {jobs} jobs \u00d7 {tpj} threads each"
+        )
 
 
 def _create_page_header(logo_manager: LogoManager, title: str) -> QHBoxLayout:
