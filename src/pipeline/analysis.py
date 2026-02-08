@@ -239,7 +239,7 @@ def run_analysis(
     log(f"Total time elapsed: {minutes} minutes and {seconds} seconds.")
     log(f"SUMMARY REPORT: {summaries_dir}/")
     log("  - barcode##_summary.tsv: All alleles per barcode")
-    log("  - barcode##_Profile.tsv: Top 2 alleles per locus (flagged if below threshold)")
+    log("  - barcode##_Profile.tsv: Top 2 alleles per locus ")
     log("  - Plots/: Visualization plots for each barcode")
     log("========================================================")
 
