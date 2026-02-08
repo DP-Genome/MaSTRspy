@@ -203,6 +203,7 @@ class MainWindow(QMainWindow):
             "norm_cutoff": self.analysis_page.get_norm_cutoff(),
             "norm_cutoff_overrides": self.analysis_page.get_overrides_path(),
             "num_threads": self.analysis_page.get_num_threads(),
+            "enable_snv": self.analysis_page.get_enable_snv(),
             "needs_prepping": (
                 self.workflow_manager.needs_prepping()
                 if self.workflow_manager
@@ -259,9 +260,11 @@ class MainWindow(QMainWindow):
 <b>Min Accuracy:</b> {p['min_acc']:.2f}<br>
 """
 
+        snv_status = "Enabled" if p.get("enable_snv") else "Disabled"
         review_text += f"""
 <h3>Analysis</h3>
 <b>Norm Cutoff:</b> {p['norm_cutoff']:.2f}<br>
+<b>SNV Calling (xatlas):</b> {snv_status}<br>
 """
 
         if p.get("norm_cutoff_overrides"):

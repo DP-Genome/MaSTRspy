@@ -10,10 +10,10 @@ REQUIRED_TOOLS = {
     "samtools": {"flag": "--version", "description": "SAM/BAM file manipulation"},
     "bedtools": {"flag": "--version", "description": "BED file operations"},
     "minimap2": {"flag": "--version", "description": "Read alignment"},
-    "xatlas": {"flag": "--help", "description": "SNV calling"},
 }
 
 OPTIONAL_TOOLS = {
+    "xatlas": {"flag": "--help", "description": "SNV calling (optional)"},
     "dorado": {"flag": "--version", "description": "Basecalling (POD5 input)"},
     "Rscript": {"flag": "--version", "description": "Plot generation (optional)"},
 }

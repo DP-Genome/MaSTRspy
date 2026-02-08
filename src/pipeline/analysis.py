@@ -70,6 +70,7 @@ def run_analysis(
     norm_cutoff_overrides_path = config.get("NORM_CUTOFF_OVERRIDES", "")
     num_parallel_jobs = int(config.get("NUM_PARALLEL_JOBS", "8"))
     num_threads = int(config.get("NUM_THREADS", "16"))
+    enable_snv = config.get("ENABLE_SNV", "no").lower() == "yes"
 
     bedtools = tools.get("BEDTOOLS", "bedtools")
     minimap = tools.get("MINIMAP", "minimap2")
@@ -107,13 +108,15 @@ def run_analysis(
     log("========================================================")
 
     # Create output sub-directories
-    for subdir in [
+    subdirs = [
         "IntersectMappedReads",
         "Countings",
-        "SNVcalls",
         "GenomeMapping",
         "GenomicMappingStats",
-    ]:
+    ]
+    if enable_snv:
+        subdirs.append("SNVcalls")
+    for subdir in subdirs:
         os.makedirs(os.path.join(output_dir, subdir), exist_ok=True)
 
     input_file_type = "bam" if input_bam == "yes" else "fastq"
@@ -196,6 +199,7 @@ def run_analysis(
         "samtools": samtools,
         "minimap": minimap,
         "xatlas": xatlas,
+        "enable_snv": enable_snv,
     }
 
     # Create parent temp dir

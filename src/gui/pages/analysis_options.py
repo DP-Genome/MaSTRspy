@@ -5,6 +5,7 @@ import os
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
+    QCheckBox,
     QFileDialog,
     QGroupBox,
     QHBoxLayout,
@@ -119,6 +120,21 @@ class AnalysisOptionsPage(QWidget):
         thread_help.setStyleSheet("color: #666666; font-size: 9pt;")
         perf_layout.addWidget(thread_help)
 
+        perf_layout.addSpacing(10)
+        self.snv_checkbox = QCheckBox("Enable SNV calling (xatlas)")
+        self.snv_checkbox.setChecked(False)
+        self.snv_checkbox.setToolTip(
+            "Run xatlas to call SNVs within STR regions. "
+            "Does not affect STR genotyping results."
+        )
+        perf_layout.addWidget(self.snv_checkbox)
+
+        snv_help = QLabel(
+            "Optional: calls SNVs per locus. Does not affect STR genotyping."
+        )
+        snv_help.setStyleSheet("color: #666666; font-size: 9pt;")
+        perf_layout.addWidget(snv_help)
+
         layout.addWidget(perf_group)
         self._update_thread_split_label()
 
@@ -217,6 +233,9 @@ class AnalysisOptionsPage(QWidget):
 
     def get_num_threads(self) -> int:
         return self.threads_spin.value()
+
+    def get_enable_snv(self) -> bool:
+        return self.snv_checkbox.isChecked()
 
     def _update_thread_split_label(self):
         total = self.threads_spin.value()

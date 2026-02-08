@@ -200,6 +200,22 @@ class TestGenerateInputConfig:
         assert "NUM_PARALLEL_JOBS=8" in result
         assert "NUM_THREADS=8" in result
 
+    def test_enable_snv_yes(self):
+        result = generate_input_config(
+            "/input", "/output", {"enable_snv": True}
+        )
+        assert "ENABLE_SNV=yes" in result
+
+    def test_enable_snv_no_by_default(self):
+        result = generate_input_config("/input", "/output", {})
+        assert "ENABLE_SNV=no" in result
+
+    def test_enable_snv_false(self):
+        result = generate_input_config(
+            "/input", "/output", {"enable_snv": False}
+        )
+        assert "ENABLE_SNV=no" in result
+
 
 class TestComputeThreadSplit:
     def test_128_threads(self):

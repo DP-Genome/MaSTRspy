@@ -107,6 +107,7 @@ def generate_input_config(
     norm_cutoff_overrides = params.get("norm_cutoff_overrides", "")
     total_threads = params.get("num_threads", 16)
     num_jobs, threads_per_job = compute_thread_split(total_threads)
+    enable_snv = "yes" if params.get("enable_snv", False) else "no"
 
     if master_config_path and os.path.exists(master_config_path):
         with open(master_config_path, "r") as f:
@@ -117,6 +118,7 @@ def generate_input_config(
         saw_norm_overrides = False
         saw_num_parallel_jobs = False
         saw_num_threads = False
+        saw_enable_snv = False
 
         for line in lines:
             if re.match(r"^\s*INPUT_DIR=", line):
@@ -142,6 +144,9 @@ def generate_input_config(
             elif re.match(r"^\s*NUM_THREADS=", line):
                 saw_num_threads = True
                 new_lines.append(f"NUM_THREADS={threads_per_job}\n")
+            elif re.match(r"^\s*ENABLE_SNV=", line):
+                saw_enable_snv = True
+                new_lines.append(f"ENABLE_SNV={enable_snv}\n")
             else:
                 new_lines.append(line)
 
@@ -156,6 +161,8 @@ def generate_input_config(
             new_lines.append(f"NUM_PARALLEL_JOBS={num_jobs}\n")
         if not saw_num_threads:
             new_lines.append(f"NUM_THREADS={threads_per_job}\n")
+        if not saw_enable_snv:
+            new_lines.append(f"ENABLE_SNV={enable_snv}\n")
 
         return "".join(new_lines)
     else:
@@ -166,6 +173,7 @@ def generate_input_config(
             f"NORM_CUTOFF={norm_cutoff}\n"
             f"NUM_PARALLEL_JOBS={num_jobs}\n"
             f"NUM_THREADS={threads_per_job}\n"
+            f"ENABLE_SNV={enable_snv}\n"
         )
         if norm_cutoff_overrides:
             config_str += f'NORM_CUTOFF_OVERRIDES="{norm_cutoff_overrides}"\n'

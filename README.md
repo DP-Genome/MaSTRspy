@@ -30,7 +30,7 @@ MaSTRspy detects input file types automatically and builds an adaptive workflow 
 | [samtools](https://www.htslib.org/) | SAM/BAM manipulation | Yes |
 | [bedtools](https://bedtools.readthedocs.io/) | Genomic interval operations | Yes |
 | [minimap2](https://github.com/lh3/minimap2) | Long-read alignment | Yes |
-| [xatlas](https://github.com/broadinstitute/xatlas) | Variant calling | Yes |
+| [xatlas](https://github.com/broadinstitute/xatlas) | SNV calling within STR regions | Optional |
 | [dorado](https://github.com/nanoporetech/dorado) | ONT basecalling (POD5 input) | Optional |
 | [Rscript](https://www.r-project.org/) | ggplot2-based profile plots | Optional |
 
@@ -85,7 +85,13 @@ docker run -e DISPLAY=$DISPLAY \
 ### Launch the GUI
 
 ```bash
-python main.py
+MaSTRspy activate
+```
+
+Or run directly without installing:
+
+```bash
+python main.py activate
 ```
 
 The wizard walks through these pages:
@@ -95,7 +101,7 @@ The wizard walks through these pages:
 3. **Experiment Setup** — Name the run and choose an output directory
 4. **Basecalling** *(POD5 only)* — Select a Dorado model and demultiplexing kit
 5. **Filtering** — Pick a quality-filter preset or set custom thresholds
-6. **Analysis Options** — Reference genome, normalization cutoff, per-locus overrides
+6. **Analysis Options** — Reference genome, normalization cutoff, per-locus overrides, thread control, optional SNV calling
 7. **Review** — Confirm all settings before starting
 8. **Processing** — Live log output and stage progress indicators
 9. **Results** — Browse summary tables, STR profiles, and allele plots
@@ -107,7 +113,7 @@ The wizard walks through these pages:
 | Basecalling | POD5 | `1_basecalled.bam` | dorado |
 | Demultiplexing | BAM | `2_demuxed/` | dorado demux |
 | Prepping | BAM / FASTQ | `3_prepped/` | minimap2, samtools |
-| Analysis | Aligned BAM | `4_analysis/` | bedtools, samtools, xatlas |
+| Analysis | Aligned BAM | `4_analysis/` | bedtools, samtools, xatlas (optional) |
 
 The prepping stage applies filters in sequence:
 
@@ -159,8 +165,17 @@ READ_TYPE=ont
 GENOME_FASTA=/path/to/reference.fa
 REGION_BED=/path/to/DBv5.bed
 NORM_CUTOFF=0.1
-NUM_THREADS=16
+NUM_PARALLEL_JOBS=2
+NUM_THREADS=4
+ENABLE_SNV=no
 ```
+
+The GUI exposes a single **Total Threads** control. The system auto-splits it into parallel jobs and threads per job:
+
+- **>= 64 threads:** 8 parallel jobs
+- **< 64 threads:** 2 parallel jobs
+
+**SNV calling (xatlas)** is disabled by default. When enabled, xatlas failures are non-fatal — the pipeline logs a warning and continues STR genotyping for every locus regardless.
 
 ### Filter presets
 
@@ -224,7 +239,7 @@ MaSTRspy/
       styles.py                #   Dark/light theme styles
       pages/                   #   9 wizard pages
       dialogs/                 #   Results viewer, overrides editor
-  tests/                       # 364 tests across 18 files
+  tests/                       # 376 tests across 18 files
 ```
 
 ## Testing
@@ -234,7 +249,7 @@ pip install ".[dev]"
 python -m pytest tests/ -v
 ```
 
-All 364 tests cover core logic, filters, pipeline stages, config handling, and infrastructure.
+All 376 tests cover core logic, filters, pipeline stages, config handling, and infrastructure.
 
 ## Development
 
