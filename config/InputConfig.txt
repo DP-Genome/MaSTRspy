@@ -2,12 +2,12 @@
 INPUT_DIR=/home/maingate/Desktop/q0Processed
 INPUT_BAM=yes
 READ_TYPE=ont
-STR_FASTA=/home/machine/Desktop/MaSTRp1/MaSTR_DatabaseV5/Database
-STR_BED=/home/machine/Desktop/MaSTRp1/MaSTR_DatabaseV5/Database
+STR_FASTA=/home/machine/Desktop/Star/MaSTRspy/MaSTRDB/Database/UCSC/UCSC_MaSTR_DatabaseV5/Database
+STR_BED=/home/machine/Desktop/Star/MaSTRspy/MaSTRDB/Database/UCSC/UCSC_MaSTR_DatabaseV5/Database
 GENOME_FASTA=/home/maingate/Desktop/hg38.fa
-REGION_BED=/home/machine/Desktop/MaSTRp1/MaSTR_DatabaseV5/DBv5.bed
-NORM_CUTOFF=0.1
-NORM_CUTOFF_OVERRIDES=/home/machine/Desktop/MaSTRp1/config/overrides.tsv
+REGION_BED=/home/machine/Desktop/Star/MaSTRspy/MaSTRDB/Database/UCSC/UCSC_MaSTR_DatabaseV5/DBv5.bed
+NORM_CUTOFF=0.4
+NORM_CUTOFF_OVERRIDES=/home/machine/Desktop/Star/MaSTRspy/config/overrides.tsv
 OUTPUT_DIR=/home/maingate/Desktop/q0Processed_analysis
 NUM_PARALLEL_JOBS=2
 NUM_THREADS=4
