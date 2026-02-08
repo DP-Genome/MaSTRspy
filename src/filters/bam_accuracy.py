@@ -61,21 +61,33 @@ def filter_bam_by_accuracy(
     out_bam: str,
     min_acc: float,
     log: Callable[[str], None] = print,
+    progress_interval: int = 100000,
 ) -> Dict[str, int]:
     """Filter aligned BAM reads by alignment accuracy.
 
     Accuracy = matches / (matches + mismatches + insertions + deletions).
     Unmapped reads and reads missing MD/CIGAR are skipped.
     Returns dict with keys: passed, filtered, skipped.
+
+    (#6) Added progress logging every progress_interval reads.
     """
     passed = 0
     filtered = 0
     skipped = 0
+    total_processed = 0
 
     inp = pysam.AlignmentFile(in_bam, "rb")
     out = pysam.AlignmentFile(out_bam, "wb", template=inp)
 
     for r in inp.fetch(until_eof=True):
+        total_processed += 1
+
+        if total_processed % progress_interval == 0:
+            log(
+                f"[bam_accuracy_filter] Processed {total_processed:,} reads "
+                f"(passed: {passed:,}, filtered: {filtered:,})..."
+            )
+
         if r.is_unmapped:
             skipped += 1
             continue
@@ -101,7 +113,7 @@ def filter_bam_by_accuracy(
     out.close()
 
     log(
-        f"[bam_accuracy_filter] Passed: {passed}, "
-        f"Filtered: {filtered}, Skipped: {skipped}"
+        f"[bam_accuracy_filter] Complete: {total_processed:,} total, "
+        f"Passed: {passed:,}, Filtered: {filtered:,}, Skipped: {skipped:,}"
     )
     return {"passed": passed, "filtered": filtered, "skipped": skipped}

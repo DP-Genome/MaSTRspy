@@ -27,12 +27,18 @@ def organize_by_barcode(
         log(f"Error: Directory '{counting_dir}' not found.")
         return
 
-    # 1. Remove Toptwo.txt files
-    log("Removing files ending with 'Toptwo.txt'...")
-    for f in os.listdir(counting_dir):
-        if f.endswith("Toptwo.txt") and os.path.isfile(os.path.join(counting_dir, f)):
+    # 1. Remove legacy Toptwo.txt files (#12: no longer generated, but clean up old ones)
+    toptwo_files = [
+        f for f in os.listdir(counting_dir)
+        if f.endswith("Toptwo.txt") and os.path.isfile(os.path.join(counting_dir, f))
+    ]
+    if toptwo_files:
+        log(f"Removing {len(toptwo_files)} legacy Toptwo.txt files...")
+        for f in toptwo_files:
             os.remove(os.path.join(counting_dir, f))
-    log("Cleanup complete.")
+        log("Cleanup complete.")
+    else:
+        log("No legacy Toptwo.txt files to clean up.")
 
     # 2. Create barcode directories
     log(f"Creating directories from barcode01 to barcode{num_barcodes:02d}...")
