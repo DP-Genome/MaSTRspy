@@ -54,6 +54,13 @@ def filter_bam_by_qs(
     return {"passed": passed, "filtered": filtered, "no_tag_count": no_tag_count}
 
 
+# (#7) Improved regex: handles qs:f:12.5, qs:i:12, qs=12.5, qs=f:12.5
+# Also handles scientific notation (e.g., qs:f:1.2e1) and negative values
+_QS_PATTERN = re.compile(
+    r"qs[:=](?:[fi]:)?(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)"
+)
+
+
 def filter_fastq_by_qs(
     input_path: str,
     output_path: str,
@@ -62,7 +69,8 @@ def filter_fastq_by_qs(
 ) -> Dict[str, int]:
     """Filter FASTQ reads by the Dorado 'qs' tag in the header.
 
-    Matches patterns like: qs:f:12.5, qs:i:12, qs=12.5
+    (#7) Improved regex handles: qs:f:12.5, qs:i:12, qs=12.5,
+    qs=f:12.5, and scientific notation.
     Reads without the tag are passed through.
     Returns dict with keys: passed, filtered, no_tag_count.
     """
@@ -70,8 +78,6 @@ def filter_fastq_by_qs(
     filtered = 0
     no_tag_count = 0
     tag_found = False
-
-    qs_pattern = re.compile(r"qs[:=][fi]?:?(\d+\.?\d*)")
 
     with open(input_path, "r") as fin, open(output_path, "w") as fout:
         while True:
@@ -85,7 +91,7 @@ def filter_fastq_by_qs(
             if not qual:
                 break
 
-            match = qs_pattern.search(header)
+            match = _QS_PATTERN.search(header)
 
             if match:
                 tag_found = True

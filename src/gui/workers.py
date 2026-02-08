@@ -9,8 +9,10 @@ from PySide6.QtCore import QObject, Signal
 
 from src.core.config import generate_input_config
 from src.core.file_detector import FileType
-from src.pipeline.analysis import run_analysis
+from src.core.validation import validate_pipeline_inputs
+from src.pipeline.analysis import run_analysis, run_analysis_direct
 from src.pipeline.prepping import run_prepping
+from src.pipeline.workflow_plan import build_workflow_plan
 
 
 class FullWorkflowWorker(QObject):
@@ -29,6 +31,21 @@ class FullWorkflowWorker(QObject):
             p = self.params
             exp_output_dir = os.path.join(p["output_dir"], p["exp_name"])
             os.makedirs(exp_output_dir, exist_ok=True)
+
+            # (#13) Validate inputs before starting
+            validation = validate_pipeline_inputs(p, log=self.log_message.emit)
+            if not validation.is_valid:
+                for err in validation.errors:
+                    self.log_message.emit(f"[VALIDATION ERROR] {err}")
+                self.finished.emit(1, "")
+                return
+
+            # (#10) Build workflow plan for visibility
+            plan = build_workflow_plan(p, self.project_dir)
+            self.log_message.emit("--- Workflow Plan ---")
+            for i, step in enumerate(plan.steps, 1):
+                self.log_message.emit(f"  {i}. {step.name}: {step.description}")
+            self.log_message.emit("--------------------")
 
             if p.get("file_type") == FileType.POD5:
                 self.stage_started.emit("Basecalling")
@@ -78,13 +95,17 @@ class FullWorkflowWorker(QObject):
                     "ref_genome": p["ref_genome"],
                     "exp_name": p["exp_name"],
                     "input_type": p.get("input_type", "bam"),
+                    "num_threads": p.get("num_threads", 16),  # (#4)
                     "min_dorado_q": p.get("min_dorado_q", 0),
                     "min_mean_q": p.get("min_mean_q", 0),
                     "min_len": p.get("min_len", 0),
                     "min_acc": p.get("min_acc", 0),
                 }
 
-                run_prepping(prep_params, log=self.log_message.emit)
+                reports = run_prepping(prep_params, log=self.log_message.emit)
+                # (#8) Log QC summary from filter reports
+                if reports:
+                    self.log_message.emit(f"[QC] {len(reports)} samples prepped")
 
                 self.stage_complete.emit("Prepping")
                 input_for_analysis = prepped_dir
@@ -94,7 +115,10 @@ class FullWorkflowWorker(QObject):
             self.stage_started.emit("Analysis")
             analysis_dir = os.path.join(exp_output_dir, "4_analysis")
 
+            # (#9) Use run_analysis_direct when possible
             master_config = os.path.join(self.project_dir, "config", "InputConfig.txt")
+            tools_config = os.path.join(self.project_dir, "config", "ToolsConfig.txt")
+
             input_config_content = generate_input_config(
                 input_for_analysis, analysis_dir, p, master_config
             )
@@ -104,8 +128,6 @@ class FullWorkflowWorker(QObject):
             ) as f:
                 f.write(input_config_content)
                 input_config_path = f.name
-
-            tools_config = os.path.join(self.project_dir, "config", "ToolsConfig.txt")
 
             try:
                 results_dir = run_analysis(
