@@ -9,7 +9,7 @@ MaSTRspy detects input file types automatically and builds an adaptive workflow 
 - **Automatic file detection** — POD5, BAM (aligned/unaligned), and FASTQ inputs are classified on the fly; unnecessary pipeline stages are skipped
 - **Adaptive workflow** — POD5 runs all four stages; aligned BAMs skip straight to analysis
 - **Quality filtering** — Configurable presets (Lenient, Moderate, Stringent) or custom thresholds for Dorado QS, mean Phred quality, read length, and alignment accuracy
-- **47-locus STR database** — Autosomal and Y-STR markers mapped to GRCh38
+- **45-locus STR database** — Autosomal and Y-STR markers mapped to GRCh38
 - **Normalization and stutter detection** — Multiple normalization methods with configurable per-locus cutoff overrides
 - **Multi-sample processing** — Barcode-aware demultiplexing and per-barcode result organization
 - **Checkpoint/resume** — Long-running analyses can resume from the last completed locus
