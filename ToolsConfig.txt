@@ -1,0 +1,6 @@
+#"=========================================Tools global path=========================================================================="
+BEDTOOLS=/usr/bin/bedtools
+MINIMAP=/usr/bin/minimap2
+SAMTOOLS=/usr/bin/samtools
+XATLAS=/home/machine/miniconda3/bin/xatlas
+PARALLEL=/home/machine/miniconda3/bin/parallel
