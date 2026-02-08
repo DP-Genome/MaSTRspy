@@ -5,17 +5,25 @@ Provides a GUI-compatible handler that emits to Qt signals.
 """
 
 import logging
+import logging.handlers
 import os
 import sys
+import time
 from datetime import datetime
-from typing import Callable, Optional
+from typing import Any, Callable, Dict, Optional
 
 
 LOGGER_NAME = "mastrspy"
 
-# Log format for console/file output
-LOG_FORMAT = "%(asctime)s [%(levelname)s] %(message)s"
+# Log format for console output (concise)
+CONSOLE_FORMAT = "%(asctime)s [%(levelname)s] %(message)s"
+# Log format for file output (richer context)
+FILE_FORMAT = "%(asctime)s [%(levelname)-8s] [%(name)s] %(message)s"
 LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+# RotatingFileHandler defaults
+MAX_LOG_BYTES = 10 * 1024 * 1024  # 10 MB
+BACKUP_COUNT = 3
 
 
 class CallbackHandler(logging.Handler):
@@ -54,7 +62,7 @@ class LogBridge:
         if not msg:
             return
         upper = msg.upper()
-        if upper.startswith("[ERROR]"):
+        if upper.startswith("[ERROR]") or upper.startswith("[VALIDATION ERROR]"):
             self._logger.error(msg)
         elif upper.startswith("[WARNING]"):
             self._logger.warning(msg)
@@ -78,7 +86,7 @@ def setup_logging(
 
     Args:
         level: logging level (DEBUG, INFO, WARNING, ERROR)
-        log_file: optional path to write logs to disk
+        log_file: optional path to write logs to disk (uses RotatingFileHandler)
         gui_callback: optional callback for GUI log display
 
     Returns:
@@ -90,20 +98,26 @@ def setup_logging(
     # Clear existing handlers to avoid duplicates on reconfiguration
     logger.handlers.clear()
 
-    formatter = logging.Formatter(LOG_FORMAT, datefmt=LOG_DATE_FORMAT)
+    console_formatter = logging.Formatter(CONSOLE_FORMAT, datefmt=LOG_DATE_FORMAT)
+    file_formatter = logging.Formatter(FILE_FORMAT, datefmt=LOG_DATE_FORMAT)
 
     # Console handler
     console = logging.StreamHandler(sys.stdout)
     console.setLevel(level)
-    console.setFormatter(formatter)
+    console.setFormatter(console_formatter)
     logger.addHandler(console)
 
-    # File handler
+    # File handler (rotating)
     if log_file:
         os.makedirs(os.path.dirname(log_file) or ".", exist_ok=True)
-        file_handler = logging.FileHandler(log_file, mode="a")
+        file_handler = logging.handlers.RotatingFileHandler(
+            log_file,
+            mode="a",
+            maxBytes=MAX_LOG_BYTES,
+            backupCount=BACKUP_COUNT,
+        )
         file_handler.setLevel(level)
-        file_handler.setFormatter(formatter)
+        file_handler.setFormatter(file_formatter)
         logger.addHandler(file_handler)
 
     # GUI callback handler (no timestamp — GUI adds its own formatting)
@@ -121,3 +135,56 @@ def get_log_file_path(output_dir: str, exp_name: str) -> str:
     """Generate a timestamped log file path."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return os.path.join(output_dir, f"{exp_name}_{timestamp}.log")
+
+
+def write_log_header(
+    logger: logging.Logger, params: Dict[str, Any], log_file: Optional[str] = None
+) -> None:
+    """Write a structured header block at the top of a log run."""
+    logger.info("=" * 60)
+    logger.info("MaSTRspy Run Log")
+    logger.info("=" * 60)
+    logger.info("Start time : %s", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    if log_file:
+        logger.info("Log file   : %s", log_file)
+    logger.info("Experiment : %s", params.get("exp_name", "N/A"))
+    logger.info("Input      : %s", params.get("input_path", "N/A"))
+    logger.info("Output dir : %s", params.get("output_dir", "N/A"))
+    logger.info("Ref genome : %s", params.get("ref_genome", "N/A"))
+    logger.info("Threads    : %s", params.get("num_threads", "N/A"))
+    logger.info("=" * 60)
+
+
+def write_log_footer(
+    logger: logging.Logger,
+    start_time: float,
+    success: bool,
+    results_dir: str = "",
+) -> None:
+    """Write a footer block with elapsed time and status."""
+    elapsed = time.time() - start_time
+    mins, secs = divmod(int(elapsed), 60)
+    logger.info("=" * 60)
+    logger.info("Run %s", "COMPLETED" if success else "FAILED")
+    logger.info("Elapsed    : %dm %02ds", mins, secs)
+    if results_dir:
+        logger.info("Results    : %s", results_dir)
+    logger.info("=" * 60)
+
+
+def log_stage_separator(logger: logging.Logger, stage_name: str) -> None:
+    """Write a separator line between pipeline stages."""
+    logger.info("-" * 60)
+    logger.info(">> Stage: %s", stage_name)
+    logger.info("-" * 60)
+
+
+def close_logging(logger: Optional[logging.Logger] = None) -> None:
+    """Flush and close all file handlers on the logger."""
+    if logger is None:
+        logger = logging.getLogger(LOGGER_NAME)
+    for handler in logger.handlers[:]:
+        handler.flush()
+        if isinstance(handler, logging.FileHandler):
+            handler.close()
+            logger.removeHandler(handler)

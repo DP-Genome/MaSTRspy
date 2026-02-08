@@ -3,12 +3,22 @@
 import os
 import subprocess
 import tempfile
+import time
 from typing import Any, Dict, List
 
 from PySide6.QtCore import QObject, Signal
 
 from src.core.config import generate_input_config
 from src.core.file_detector import FileType
+from src.core.logging_config import (
+    LogBridge,
+    close_logging,
+    get_log_file_path,
+    log_stage_separator,
+    setup_logging,
+    write_log_footer,
+    write_log_header,
+)
 from src.core.validation import validate_pipeline_inputs
 from src.pipeline.analysis import run_analysis, run_analysis_direct
 from src.pipeline.prepping import run_prepping
@@ -27,36 +37,57 @@ class FullWorkflowWorker(QObject):
         self.project_dir = project_dir
 
     def run(self):
+        start_time = time.time()
+        success = False
+        results_dir = ""
+        logger = None
+
         try:
             p = self.params
             exp_output_dir = os.path.join(p["output_dir"], p["exp_name"])
             os.makedirs(exp_output_dir, exist_ok=True)
 
+            # Set up structured logging: file + console + GUI
+            log_file = get_log_file_path(exp_output_dir, p["exp_name"])
+            logger = setup_logging(
+                log_file=log_file,
+                gui_callback=self.log_message.emit,
+            )
+            log = LogBridge(logger)
+
+            write_log_header(logger, p, log_file=log_file)
+
             # (#13) Validate inputs before starting
-            validation = validate_pipeline_inputs(p, log=self.log_message.emit)
+            validation = validate_pipeline_inputs(p, log=log)
             if not validation.is_valid:
                 for err in validation.errors:
-                    self.log_message.emit(f"[VALIDATION ERROR] {err}")
+                    log(f"[VALIDATION ERROR] {err}")
+                write_log_footer(logger, start_time, success=False)
+                close_logging(logger)
                 self.finished.emit(1, "")
                 return
 
             # (#10) Build workflow plan for visibility
             plan = build_workflow_plan(p, self.project_dir)
-            self.log_message.emit("--- Workflow Plan ---")
+            log("--- Workflow Plan ---")
             for i, step in enumerate(plan.steps, 1):
-                self.log_message.emit(f"  {i}. {step.name}: {step.description}")
-            self.log_message.emit("--------------------")
+                log(f"  {i}. {step.name}: {step.description}")
+            log("--------------------")
 
             if p.get("file_type") == FileType.POD5:
+                log_stage_separator(logger, "Basecalling")
                 self.stage_started.emit("Basecalling")
                 basecalled_bam = os.path.join(exp_output_dir, "1_basecalled.bam")
 
                 cmd = ["dorado", "basecaller", p["model_path"], p["input_path"]]
-                if not self._run_stage(cmd, basecalled_bam, is_basecaller=True):
+                if not self._run_stage(cmd, basecalled_bam, log=log, is_basecaller=True):
+                    write_log_footer(logger, start_time, success=False)
+                    close_logging(logger)
                     self.finished.emit(1, "")
                     return
                 self.stage_complete.emit("Basecalling")
 
+                log_stage_separator(logger, "Demultiplexing")
                 self.stage_started.emit("Demultiplexing")
                 demux_dir = os.path.join(exp_output_dir, "2_demuxed")
                 os.makedirs(demux_dir, exist_ok=True)
@@ -71,7 +102,9 @@ class FullWorkflowWorker(QObject):
                         p["demux_kit"],
                         basecalled_bam,
                     ]
-                    if not self._run_stage(cmd):
+                    if not self._run_stage(cmd, log=log):
+                        write_log_footer(logger, start_time, success=False)
+                        close_logging(logger)
                         self.finished.emit(1, "")
                         return
                 else:
@@ -85,6 +118,7 @@ class FullWorkflowWorker(QObject):
                 input_for_prepping = p["input_path"]
 
             if p.get("needs_prepping", True):
+                log_stage_separator(logger, "Prepping")
                 self.stage_started.emit("Prepping")
                 prepped_dir = os.path.join(exp_output_dir, "3_prepped")
                 os.makedirs(prepped_dir, exist_ok=True)
@@ -102,16 +136,17 @@ class FullWorkflowWorker(QObject):
                     "min_acc": p.get("min_acc", 0),
                 }
 
-                reports = run_prepping(prep_params, log=self.log_message.emit)
+                reports = run_prepping(prep_params, log=log)
                 # (#8) Log QC summary from filter reports
                 if reports:
-                    self.log_message.emit(f"[QC] {len(reports)} samples prepped")
+                    log(f"[QC] {len(reports)} samples prepped")
 
                 self.stage_complete.emit("Prepping")
                 input_for_analysis = prepped_dir
             else:
                 input_for_analysis = input_for_prepping
 
+            log_stage_separator(logger, "Analysis")
             self.stage_started.emit("Analysis")
             analysis_dir = os.path.join(exp_output_dir, "4_analysis")
 
@@ -133,28 +168,36 @@ class FullWorkflowWorker(QObject):
                 results_dir = run_analysis(
                     input_config_path,
                     tools_config,
-                    log=self.log_message.emit,
+                    log=log,
                 )
             finally:
                 os.remove(input_config_path)
 
             self.stage_complete.emit("Analysis")
+            success = True
+            write_log_footer(logger, start_time, success=True, results_dir=results_dir)
+            close_logging(logger)
             self.finished.emit(0, results_dir)
 
         except Exception as e:
             self.log_message.emit(f"\n[ERROR] Workflow failed: {e}\n")
+            if logger:
+                write_log_footer(logger, start_time, success=False)
+                close_logging(logger)
             self.finished.emit(1, "")
 
     def _run_stage(
         self,
         command: List[str],
         output_file: str = None,
+        log: Any = None,
         is_basecaller: bool = False,
     ) -> bool:
         """Run an external command stage (basecalling/demux only)."""
+        _log = log or self.log_message.emit
         try:
             log_cmd = " ".join(f'"{arg}"' if " " in arg else arg for arg in command)
-            self.log_message.emit(f"[CMD] {log_cmd}\n")
+            _log(f"[CMD] {log_cmd}\n")
 
             if is_basecaller:
                 with open(output_file, "wb") as f_out:
@@ -165,7 +208,7 @@ class FullWorkflowWorker(QObject):
                         text=True,
                     )
                     for line in iter(process.stderr.readline, ""):
-                        self.log_message.emit(line.rstrip())
+                        _log(line.rstrip())
                     return_code = process.wait()
             else:
                 process = subprocess.Popen(
@@ -176,12 +219,12 @@ class FullWorkflowWorker(QObject):
                     bufsize=1,
                 )
                 for line in iter(process.stdout.readline, ""):
-                    self.log_message.emit(line.rstrip())
+                    _log(line.rstrip())
                 process.stdout.close()
                 return_code = process.wait()
 
             return return_code == 0
 
         except Exception as e:
-            self.log_message.emit(f"\n[ERROR] Stage failed: {e}\n")
+            _log(f"\n[ERROR] Stage failed: {e}\n")
             return False
