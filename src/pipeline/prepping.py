@@ -294,7 +294,10 @@ def _process_bam_input(
             f"[INFO] Applying pre-alignment filters "
             f"(min-mean-q={min_mean_q}, min-len={min_len})"
         )
-        with _temp_files([".fastq", ".fastq"], output_dir) as (tmp_fq_path, tmp_filtered_path):
+        with _temp_files([".fastq", ".fastq"], output_dir) as (
+            tmp_fq_path,
+            tmp_filtered_path,
+        ):
             # samtools fastq
             with open(tmp_fq_path, "w") as fq_out:
                 result = subprocess.run(
@@ -307,7 +310,9 @@ def _process_bam_input(
                     log(f"[DEBUG] samtools fastq: {result.stderr.strip()}")
 
             # fastq filter
-            stats = filter_fastq(tmp_fq_path, tmp_filtered_path, min_mean_q, min_len, log)
+            stats = filter_fastq(
+                tmp_fq_path, tmp_filtered_path, min_mean_q, min_len, log
+            )
             if report:
                 report.add_stage("fastq_quality", stats)
 

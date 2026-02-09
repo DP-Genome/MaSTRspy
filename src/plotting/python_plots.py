@@ -23,7 +23,7 @@ def _parse_summary_tsv(filepath: str) -> Dict[str, List[Tuple[str, float]]]:
     """Parse a barcode summary TSV into {locus: [(ce_number, normalized_count), ...]}."""
     loci = {}
     with open(filepath, "r") as f:
-        header = f.readline()  # skip header
+        f.readline()  # skip header
         for line in f:
             parts = line.strip().split("\t")
             if len(parts) < 6:
@@ -44,7 +44,7 @@ def _parse_profile_tsv(filepath: str) -> Dict[str, List[dict]]:
     """Parse a barcode profile TSV into {locus: [{ce_num, norm, status, zygosity}, ...]}."""
     loci = {}
     with open(filepath, "r") as f:
-        header = f.readline()
+        f.readline()
         for line in f:
             parts = line.strip().split("\t")
             if len(parts) < 8:
@@ -137,7 +137,7 @@ def generate_profile_plot(
 
         colors = ["#2196F3" if n >= norm_cutoff else "#BDBDBD" for n in norm_counts]
 
-        bars = ax.bar(range(len(ce_numbers)), norm_counts, color=colors, width=0.7)
+        ax.bar(range(len(ce_numbers)), norm_counts, color=colors, width=0.7)
         ax.set_title(locus, fontsize=9, fontweight="bold")
         ax.set_xticks(range(len(ce_numbers)))
         ax.set_xticklabels(ce_numbers, fontsize=7, rotation=45, ha="right")

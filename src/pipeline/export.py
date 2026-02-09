@@ -1,9 +1,8 @@
 """Multi-sample report export functionality (#25)."""
 
-import csv
 import os
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List
 
 
 def export_combined_report(
@@ -109,7 +108,7 @@ def _write_overview(
             loci_data: Dict[str, List[dict]] = {}
 
             with open(pf, "r") as f:
-                header = f.readline()
+                f.readline()
                 for line in f:
                     parts = line.strip().split("\t")
                     if len(parts) < 8:
@@ -124,7 +123,8 @@ def _write_overview(
 
             total_loci = len(loci_data)
             loci_with_calls = sum(
-                1 for alleles in loci_data.values()
+                1
+                for alleles in loci_data.values()
                 if any(a["status"] == "PASS" for a in alleles)
             )
 

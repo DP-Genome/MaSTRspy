@@ -6,7 +6,7 @@ tested without a GUI or actual file I/O.
 
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from src.core.file_detector import FileType
 
@@ -29,7 +29,9 @@ class WorkflowPlan:
     input_for_analysis: str = ""
 
     def add_step(self, name: str, description: str, **params):
-        self.steps.append(WorkflowStep(name=name, description=description, params=params))
+        self.steps.append(
+            WorkflowStep(name=name, description=description, params=params)
+        )
 
     @property
     def step_names(self) -> List[str]:

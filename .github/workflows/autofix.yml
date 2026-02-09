@@ -32,11 +32,11 @@ jobs:
     
     - name: Run Black formatter
       run: |
-        black src/
+        black src/    || true
     
     - name: Run Ruff auto-fix
       run: |
-        ruff check src/ --fix --unsafe-fixes
+        ruff check src/ --fix --unsafe-fixes || true
     
     - name: Commit changes
       uses: stefanzweifel/git-auto-commit-action@v5

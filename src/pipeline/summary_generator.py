@@ -8,7 +8,6 @@ import re
 from typing import Callable, Dict, List, Tuple
 
 from src.pipeline.allele_parser import (
-    ParsedAllele,
     call_zygosity,
     detect_stutter,
     parse_allele_name,
@@ -79,9 +78,15 @@ def generate_summaries(
             barcode_path, barcode_name, summaries_dir, normalization_method, log
         )
         metrics = _generate_barcode_profile(
-            barcode_path, barcode_name, summaries_dir,
-            norm_cutoff, overrides, normalization_method,
-            stutter_filter, stutter_ratio, log,
+            barcode_path,
+            barcode_name,
+            summaries_dir,
+            norm_cutoff,
+            overrides,
+            normalization_method,
+            stutter_filter,
+            stutter_ratio,
+            log,
         )
         quality_metrics[barcode_name] = metrics
 
@@ -248,7 +253,7 @@ def _generate_barcode_profile(
             normalized_alleles = _normalize_counts(raw_alleles, normalization_method)
 
             # Build ParsedAllele objects
-            max_count = max((c for _, c, _ in normalized_alleles), default=1)
+            max((c for _, c, _ in normalized_alleles), default=1)
             parsed_alleles = []
             for name, raw_count, norm_count in normalized_alleles:
                 pa = parse_allele_name(name)

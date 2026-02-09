@@ -90,7 +90,9 @@ def run_analysis(
     checkpoint_path = os.path.join(output_dir, ".mastrspy_checkpoint.json")
     checkpoint = CheckpointManager(checkpoint_path)
     if checkpoint.completed_loci_count > 0:
-        log(f"[INFO] Resuming from checkpoint: {checkpoint.completed_loci_count} loci already complete.")
+        log(
+            f"[INFO] Resuming from checkpoint: {checkpoint.completed_loci_count} loci already complete."
+        )
 
     log("Configurations loaded successfully.")
     log("========================================================")
@@ -123,7 +125,9 @@ def run_analysis(
     input_file_type = "bam" if input_bam == "yes" else "fastq"
 
     # STEP 1: Genomic Mapping (FASTQ input only)
-    if input_file_type == "fastq" and not checkpoint.is_stage_complete("genome_mapping"):
+    if input_file_type == "fastq" and not checkpoint.is_stage_complete(
+        "genome_mapping"
+    ):
         log(
             f"\n# STEP 1: Mapping FASTQ reads to reference genome "
             f"(using {num_parallel_jobs} parallel jobs)..."
@@ -138,8 +142,15 @@ def run_analysis(
             out_bam = os.path.join(genome_mapping_dir, f"{fq.stem}.sorted.bam")
             minimap_proc = subprocess.Popen(
                 [
-                    minimap, "--MD", "-L", "-t", str(num_threads),
-                    "-ax", map_preset, genome_fasta, str(fq),
+                    minimap,
+                    "--MD",
+                    "-L",
+                    "-t",
+                    str(num_threads),
+                    "-ax",
+                    map_preset,
+                    genome_fasta,
+                    str(fq),
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -175,7 +186,11 @@ def run_analysis(
         checkpoint.mark_stage_complete("mapping_stats")
         log("# Mapping statistics complete.")
     else:
-        bam_dir_for_stats = input_dir if input_bam == "yes" else os.path.join(output_dir, "GenomeMapping")
+        bam_dir_for_stats = (
+            input_dir
+            if input_bam == "yes"
+            else os.path.join(output_dir, "GenomeMapping")
+        )
 
     # STEP 2: Process STR loci in parallel (#1: ThreadPoolExecutor)
     log("\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
@@ -217,7 +232,9 @@ def run_analysis(
     # (#15) Filter to only incomplete loci
     remaining_jobs = checkpoint.get_remaining_loci(all_jobs)
     if len(remaining_jobs) < len(all_jobs):
-        log(f"[INFO] Skipping {len(all_jobs) - len(remaining_jobs)} already-completed loci.")
+        log(
+            f"[INFO] Skipping {len(all_jobs) - len(remaining_jobs)} already-completed loci."
+        )
     log(f"[INFO] Processing {len(remaining_jobs)} loci...")
 
     # (#2) Track per-locus results for error reporting
@@ -228,7 +245,9 @@ def run_analysis(
     total_loci = len(remaining_jobs)
     completed_count = 0
     with ThreadPoolExecutor(max_workers=num_parallel_jobs) as executor:
-        futures = {executor.submit(_process_locus_wrapper, job): job for job in remaining_jobs}
+        futures = {
+            executor.submit(_process_locus_wrapper, job): job for job in remaining_jobs
+        }
         for future in as_completed(futures):
             job = futures[future]
             try:
@@ -263,7 +282,9 @@ def run_analysis(
             f.write("Sample\tLocus\tError\n")
             for fl in failed_loci:
                 log(f"  - {fl['sample']} x {fl['locus']}: {fl.get('error', 'unknown')}")
-                f.write(f"{fl['sample']}\t{fl['locus']}\t{fl.get('error', 'unknown')}\n")
+                f.write(
+                    f"{fl['sample']}\t{fl['locus']}\t{fl.get('error', 'unknown')}\n"
+                )
         log(f"  Failed loci report: {failed_report_path}")
     else:
         log(f"\n[INFO] All {len(locus_results)} loci processed successfully.")

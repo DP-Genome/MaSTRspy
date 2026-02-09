@@ -12,7 +12,6 @@ import time
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
-
 LOGGER_NAME = "mastrspy"
 
 # Log format for console output (concise)

@@ -80,9 +80,7 @@ def estimate_disk_space(input_path: str) -> Optional[int]:
             return os.path.getsize(input_path) * 3
         elif os.path.isdir(input_path):
             total = sum(
-                f.stat().st_size
-                for f in Path(input_path).rglob("*")
-                if f.is_file()
+                f.stat().st_size for f in Path(input_path).rglob("*") if f.is_file()
             )
             return total * 3
     except OSError:
@@ -94,7 +92,11 @@ def check_disk_space(output_dir: str, required_bytes: int) -> ValidationResult:
     """Check if there's enough disk space at the output location."""
     result = ValidationResult()
     try:
-        check_dir = output_dir if os.path.exists(output_dir) else os.path.dirname(output_dir) or "."
+        check_dir = (
+            output_dir
+            if os.path.exists(output_dir)
+            else os.path.dirname(output_dir) or "."
+        )
         usage = shutil.disk_usage(check_dir)
         if usage.free < required_bytes:
             free_gb = usage.free / (1024**3)
