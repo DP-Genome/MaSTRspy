@@ -295,6 +295,7 @@ class MainWindow(QMainWindow):
         self.worker.log_message.connect(self.processing_page.append_log)
         self.worker.stage_started.connect(self.processing_page.on_stage_started)
         self.worker.stage_complete.connect(self.processing_page.on_stage_complete)
+        self.worker.locus_progress.connect(self.processing_page.on_locus_progress)
         self.worker.finished.connect(self._on_workflow_finished)
         self.worker.finished.connect(self.worker_thread.quit)
         self.worker_thread.finished.connect(self.worker_thread.deleteLater)

@@ -74,11 +74,6 @@ def process_locus(
         temp_dir = tempfile.mkdtemp()
     os.makedirs(temp_dir, exist_ok=True)
 
-    intersected_bam = os.path.join(temp_dir, "intersected.bam")
-    intersected_fq = os.path.join(temp_dir, "intersected.fq")
-    motif_mapped_sam = os.path.join(temp_dir, "motif_alignment.sam")
-    motif_mapped_bam = os.path.join(temp_dir, "motif_alignment.bam")
-
     intersect_dir = os.path.join(output_dir, "IntersectMappedReads")
     os.makedirs(intersect_dir, exist_ok=True)
     motif_mapped_sorted_bam = os.path.join(
@@ -86,52 +81,52 @@ def process_locus(
     )
 
     try:
-        # Step 1: Intersect regions and create FASTQ
-        log("## Step 1/5: Intersecting reads from STR region...")
-        with open(intersected_bam, "wb") as out:
-            proc = subprocess.run(
-                [bedtools, "intersect", "-a", sample_bam, "-b", str_bed],
-                stdout=out,
-                stderr=subprocess.PIPE,
-                text=True,
-            )
-            if proc.returncode != 0:
-                raise RuntimeError(f"bedtools intersect failed: {proc.stderr}")
-
-        proc = subprocess.run(
-            [bedtools, "bamtofastq", "-i", intersected_bam, "-fq", intersected_fq],
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        if proc.returncode != 0:
-            raise RuntimeError(f"bedtools bamtofastq failed: {proc.stderr}")
-
-        # Step 2: Map extracted reads to the STR motif reference
-        log("## Step 2/5: Mapping extracted reads to STR motif reference...")
+        # Steps 1-3: Piped chain — intersect → bamtofastq → minimap2 → samtools sort
+        log("## Steps 1-3/5: Intersect, map, sort (piped)...")
         motif_fa = os.path.join(str_fasta_dir, f"{bed_fname}.fa")
         map_preset = "map-ont" if read_type == "ont" else "map-pb"
-        proc = subprocess.run(
+
+        p_intersect = subprocess.Popen(
+            [bedtools, "intersect", "-a", sample_bam, "-b", str_bed],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        p_bamtofastq = subprocess.Popen(
+            [bedtools, "bamtofastq", "-i", "/dev/stdin", "-fq", "/dev/stdout"],
+            stdin=p_intersect.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        p_intersect.stdout.close()  # allow SIGPIPE
+
+        p_minimap = subprocess.Popen(
             [
                 minimap, "--MD", "-L", "-t", num_threads,
-                "-ax", map_preset, motif_fa, intersected_fq,
-                "-o", motif_mapped_sam,
+                "-ax", map_preset, motif_fa, "-",
             ],
-            stderr=subprocess.PIPE,
-            text=True,
+            stdin=p_bamtofastq.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         )
-        if proc.returncode != 0:
-            raise RuntimeError(f"minimap2 failed: {proc.stderr}")
+        p_bamtofastq.stdout.close()
 
-        # Step 3: Convert SAM to sorted, indexed BAM
-        log("## Step 3/5: Sorting and indexing motif alignments...")
-        subprocess.run(
-            [samtools, "view", "-S", "-b", motif_mapped_sam, "-o", motif_mapped_bam],
-            check=True, stderr=subprocess.PIPE,
+        p_sort = subprocess.Popen(
+            [samtools, "sort", "-o", motif_mapped_sorted_bam, "-"],
+            stdin=p_minimap.stdout, stderr=subprocess.PIPE,
         )
-        subprocess.run(
-            [samtools, "sort", "-o", motif_mapped_sorted_bam, motif_mapped_bam],
-            check=True, stderr=subprocess.PIPE,
-        )
+        p_minimap.stdout.close()
+
+        # Wait in reverse order and check return codes
+        p_sort.wait()
+        p_minimap.wait()
+        p_bamtofastq.wait()
+        p_intersect.wait()
+
+        for name, proc in [
+            ("bedtools intersect", p_intersect),
+            ("bedtools bamtofastq", p_bamtofastq),
+            ("minimap2", p_minimap),
+            ("samtools sort", p_sort),
+        ]:
+            if proc.returncode != 0:
+                stderr_msg = proc.stderr.read().decode() if proc.stderr else ""
+                raise RuntimeError(f"{name} failed (rc={proc.returncode}): {stderr_msg}")
+
         subprocess.run(
             [samtools, "index", motif_mapped_sorted_bam],
             check=True, stderr=subprocess.PIPE,
@@ -168,20 +163,26 @@ def process_locus(
             counting_dir, f"{bed_fname}_{bam_name}_Allele_freqs.txt"
         )
 
-        # Get allele counts
+        # Get allele counts via samtools view | awk pipeline
         view_proc = subprocess.Popen(
             [samtools, "view", "-q", "1", "-F", "2308", motif_mapped_sorted_bam],
             stdout=subprocess.PIPE,
+        )
+        awk_proc = subprocess.Popen(
+            ["awk", '{if ($3 != "*") c[$3]++} END {for (a in c) print a, c[a]}'],
+            stdin=view_proc.stdout,
+            stdout=subprocess.PIPE,
             text=True,
         )
+        view_proc.stdout.close()
 
         allele_counts = {}
-        for line in view_proc.stdout:
-            fields = line.strip().split("\t")
-            if len(fields) >= 3:
-                allele = fields[2]
-                if allele != "*":
-                    allele_counts[allele] = allele_counts.get(allele, 0) + 1
+        awk_output, _ = awk_proc.communicate()
+        for line in awk_output.strip().split("\n"):
+            if line:
+                parts = line.split()
+                if len(parts) == 2:
+                    allele_counts[parts[0]] = int(parts[1])
         view_proc.wait()
 
         # Sort by count descending
@@ -213,10 +214,7 @@ def process_locus(
         log(f"[ERROR] Locus {bed_fname} for {bam_name} failed: {e}")
 
     finally:
-        # Clean up temp files (#16)
-        for tmp in [intersected_bam, intersected_fq, motif_mapped_sam, motif_mapped_bam]:
-            if os.path.exists(tmp):
-                os.remove(tmp)
+        # Clean up temp dir if we created it (#16)
         if owns_temp and os.path.isdir(temp_dir):
             shutil.rmtree(temp_dir, ignore_errors=True)
 

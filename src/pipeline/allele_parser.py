@@ -10,9 +10,10 @@ Expected allele name formats:
     LOCUS_[MOTIF]N_CEXX           alternate ordering
 """
 
+import functools
 import re
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 
 # Pattern to extract CE number: CE followed by digits (optionally with decimal)
@@ -55,6 +56,25 @@ class ParsedAllele:
         return None
 
 
+@functools.lru_cache(maxsize=4096)
+def _parse_allele_components(allele_name: str) -> Tuple[str, str, str]:
+    """Cached regex extraction of allele name components.
+
+    Returns (locus, ce_number, motif) tuple. The regex work is cached
+    across samples so repeated allele names skip the parsing overhead.
+    """
+    ce_match = _CE_PATTERN.search(allele_name)
+    ce_number = ce_match.group(1) if ce_match else ""
+
+    motif_match = _MOTIF_PATTERN.search(allele_name)
+    motif = motif_match.group(1) if motif_match else ""
+
+    locus_match = _LOCUS_PATTERN.search(allele_name)
+    locus = locus_match.group(1) if locus_match else allele_name.split("_")[0]
+
+    return (locus, ce_number, motif)
+
+
 def parse_allele_name(allele_name: str) -> ParsedAllele:
     """Parse a raw allele name string into structured components.
 
@@ -64,18 +84,7 @@ def parse_allele_name(allele_name: str) -> ParsedAllele:
     Returns:
         ParsedAllele with locus, ce_number, and motif extracted.
     """
-    # Extract CE number
-    ce_match = _CE_PATTERN.search(allele_name)
-    ce_number = ce_match.group(1) if ce_match else ""
-
-    # Extract motif
-    motif_match = _MOTIF_PATTERN.search(allele_name)
-    motif = motif_match.group(1) if motif_match else ""
-
-    # Extract locus name
-    locus_match = _LOCUS_PATTERN.search(allele_name)
-    locus = locus_match.group(1) if locus_match else allele_name.split("_")[0]
-
+    locus, ce_number, motif = _parse_allele_components(allele_name)
     return ParsedAllele(
         raw_name=allele_name,
         locus=locus,

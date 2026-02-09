@@ -35,6 +35,7 @@ def run_analysis(
     config_path: str,
     tools_config_path: str,
     log: Callable[[str], None] = print,
+    progress_callback: Optional[Callable[[int, int], None]] = None,
 ) -> str:
     """Run the full analysis pipeline.
 
@@ -224,6 +225,8 @@ def run_analysis(
     failed_loci: List[Dict] = []
 
     # (#1) Process in parallel with ThreadPoolExecutor (I/O-bound subprocess work)
+    total_loci = len(remaining_jobs)
+    completed_count = 0
     with ThreadPoolExecutor(max_workers=num_parallel_jobs) as executor:
         futures = {executor.submit(_process_locus_wrapper, job): job for job in remaining_jobs}
         for future in as_completed(futures):
@@ -245,6 +248,9 @@ def run_analysis(
                 locus_results.append(error_result)
                 failed_loci.append(error_result)
                 log(f"[ERROR] Failed processing {job[0]} x {job[1]}: {e}")
+            completed_count += 1
+            if progress_callback is not None:
+                progress_callback(completed_count, total_loci)
 
     # Clean up temp dir
     shutil.rmtree(parent_temp_dir, ignore_errors=True)
@@ -307,6 +313,7 @@ def run_analysis_direct(
     config: Dict[str, Any],
     tools: Dict[str, str],
     log: Callable[[str], None] = print,
+    progress_callback: Optional[Callable[[int, int], None]] = None,
 ) -> str:
     """Run analysis directly from config dicts (#9).
 
@@ -337,7 +344,7 @@ def run_analysis_direct(
         tools_path = f.name
 
     try:
-        return run_analysis(config_path, tools_path, log)
+        return run_analysis(config_path, tools_path, log, progress_callback)
     finally:
         os.remove(config_path)
         os.remove(tools_path)

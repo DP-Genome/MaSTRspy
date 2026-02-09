@@ -63,12 +63,23 @@ class ProcessingPage(QWidget):
         for icon_label, _ in self.stage_labels.values():
             icon_label.setText("...")
         self.processing_log.clear()
+        self.progress_bar.setRange(0, 0)
 
     def on_stage_started(self, stage_name: str):
         self.processing_status.setText(f"Running: {stage_name}...")
         if stage_name in self.stage_labels:
             icon_label, _ = self.stage_labels[stage_name]
             icon_label.setText("[...]")
+        # Reset to indeterminate for non-Analysis stages
+        if stage_name != "Analysis":
+            self.progress_bar.setRange(0, 0)
+
+    def on_locus_progress(self, completed: int, total: int):
+        self.progress_bar.setRange(0, total)
+        self.progress_bar.setValue(completed)
+        self.processing_status.setText(
+            f"Analysis: processing locus {completed}/{total}"
+        )
 
     def on_stage_complete(self, stage_name: str):
         if stage_name in self.stage_labels:

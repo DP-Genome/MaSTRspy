@@ -29,6 +29,7 @@ class FullWorkflowWorker(QObject):
     log_message = Signal(str)
     stage_started = Signal(str)
     stage_complete = Signal(str)
+    locus_progress = Signal(int, int)
     finished = Signal(int, str)
 
     def __init__(self, params: Dict[str, Any], project_dir: str):
@@ -169,6 +170,7 @@ class FullWorkflowWorker(QObject):
                     input_config_path,
                     tools_config,
                     log=log,
+                    progress_callback=lambda done, total: self.locus_progress.emit(done, total),
                 )
             finally:
                 os.remove(input_config_path)

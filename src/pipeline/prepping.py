@@ -7,10 +7,12 @@ import os
 import re
 import subprocess
 import tempfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Callable, Dict, List
 
+from src.core.config import compute_thread_split
 from src.filters.bam_accuracy import filter_bam_by_accuracy
 from src.filters.dorado_qs import filter_bam_by_qs, filter_fastq_by_qs
 from src.filters.fastq_quality import filter_fastq
@@ -135,7 +137,17 @@ def run_prepping(
         log(f"[ERROR] No {input_type} files found in {input_dir}")
         return filter_reports
 
-    for input_file in input_files:
+    # Compute thread split for parallel sample processing
+    total_threads = int(num_threads)
+    num_jobs, threads_per_job = compute_thread_split(total_threads)
+    num_jobs = min(num_jobs, len(input_files))
+    threads_str = str(threads_per_job)
+
+    log(f"Parallel Jobs: {num_jobs}")
+    log(f"Threads per Job: {threads_per_job}")
+    log("========================================")
+
+    def _process_single_sample(input_file: Path) -> FilterReport:
         file_basename = input_file.name
 
         # Extract sample name (remove extension)
@@ -174,7 +186,7 @@ def run_prepping(
                 current_input,
                 aligned_bam,
                 ref_genome,
-                num_threads,
+                threads_str,
                 min_dorado_q,
                 min_mean_q,
                 min_len,
@@ -188,7 +200,7 @@ def run_prepping(
                 str(input_file),
                 aligned_bam,
                 ref_genome,
-                num_threads,
+                threads_str,
                 min_dorado_q,
                 min_mean_q,
                 min_len,
@@ -218,7 +230,20 @@ def run_prepping(
 
         # Log QC summary
         log(report.summary_line())
-        filter_reports.append(report)
+        return report
+
+    # Process samples in parallel
+    with ThreadPoolExecutor(max_workers=num_jobs) as executor:
+        futures = {
+            executor.submit(_process_single_sample, f): f for f in input_files
+        }
+        for future in as_completed(futures):
+            input_file = futures[future]
+            try:
+                report = future.result()
+                filter_reports.append(report)
+            except Exception as e:
+                log(f"[ERROR] Failed processing {input_file.name}: {e}")
 
     log("")
     log("========================================")
