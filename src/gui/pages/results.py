@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.gui.logo import LogoManager
+from src.gui.page_utils import create_page_header
 
 
 class ResultsPage(QWidget):
@@ -23,7 +24,7 @@ class ResultsPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 30, 40, 30)
 
-        layout.addLayout(_create_page_header(logo_manager, "Results"))
+        layout.addLayout(create_page_header(logo_manager, "Results"))
         layout.addSpacing(20)
 
         success_icon = QLabel("Done!")
@@ -67,20 +68,3 @@ class ResultsPage(QWidget):
 
     def set_results_info(self, text: str):
         self.results_info.setText(text)
-
-
-def _create_page_header(logo_manager: LogoManager, title: str) -> QHBoxLayout:
-    header = QHBoxLayout()
-    mastrspy = logo_manager.create_logo_label("mastrspy", 40)
-    header.addWidget(mastrspy)
-
-    title_label = QLabel(title)
-    title_label.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-    header.addWidget(title_label)
-
-    header.addStretch()
-
-    malslabs = logo_manager.create_logo_label("malslabs", 40)
-    header.addWidget(malslabs)
-
-    return header

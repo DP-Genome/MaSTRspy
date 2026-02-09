@@ -88,21 +88,28 @@ def run_prepping(
         ref_genome (str): path to reference genome index (.mmi)
         exp_name (str): experiment name prefix
         input_type (str): 'bam' or 'fastq'
+        read_type (str): 'ont' or 'pb' (default 'ont')
         num_threads (int): threads for alignment tools (default 16)
         min_dorado_q (float): minimum Dorado qs tag score (0 = skip)
         min_mean_q (float): minimum mean quality score (0 = skip)
         min_len (int): minimum read length (0 = skip)
         min_acc (float): minimum alignment accuracy (0 = skip)
+        samtools (str): path to samtools binary (default 'samtools')
+        minimap (str): path to minimap2 binary (default 'minimap2')
     """
     input_dir = params["input_dir"]
     output_dir = params["output_dir"]
     ref_genome = params["ref_genome"]
     input_type = params.get("input_type", "bam")
+    read_type = params.get("read_type", "ont")
     num_threads = str(params.get("num_threads", 16))
     min_dorado_q = float(params.get("min_dorado_q", 0))
     min_mean_q = float(params.get("min_mean_q", 0))
     min_len = int(params.get("min_len", 0))
     min_acc = float(params.get("min_acc", 0))
+    samtools_bin = params.get("samtools", "samtools")
+    minimap_bin = params.get("minimap", "minimap2")
+    map_preset = "map-ont" if read_type == "ont" else "map-pb"
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -194,6 +201,9 @@ def run_prepping(
                 output_dir,
                 log,
                 report,
+                samtools_bin=samtools_bin,
+                minimap_bin=minimap_bin,
+                map_preset=map_preset,
             )
         else:
             _process_fastq_input(
@@ -208,6 +218,9 @@ def run_prepping(
                 output_dir,
                 log,
                 report,
+                samtools_bin=samtools_bin,
+                minimap_bin=minimap_bin,
+                map_preset=map_preset,
             )
 
         # Clean up intermediate qs-filtered BAM
@@ -225,7 +238,7 @@ def run_prepping(
             os.rename(aligned_bam, final_bam)
 
         # Index the final BAM
-        subprocess.run(["samtools", "index", final_bam], check=True)
+        subprocess.run([samtools_bin, "index", final_bam], check=True)
         log(f"--- Completed: {final_bam} ---")
 
         # Log QC summary
@@ -266,6 +279,9 @@ def _process_bam_input(
     output_dir: str,
     log: Callable[[str], None],
     report: FilterReport = None,
+    samtools_bin: str = "samtools",
+    minimap_bin: str = "minimap2",
+    map_preset: str = "map-ont",
 ) -> None:
     """Process BAM input: convert to FASTQ, optionally filter, align, sort.
 
@@ -282,7 +298,7 @@ def _process_bam_input(
             # samtools fastq
             with open(tmp_fq_path, "w") as fq_out:
                 result = subprocess.run(
-                    ["samtools", "fastq", f"-@{num_threads}", current_input],
+                    [samtools_bin, "fastq", f"-@{num_threads}", current_input],
                     stdout=fq_out,
                     stderr=subprocess.PIPE,
                     text=True,
@@ -298,37 +314,39 @@ def _process_bam_input(
             # minimap2 | samtools sort
             minimap_proc = subprocess.Popen(
                 [
-                    "minimap2", "-ax", "map-ont", "--MD",
+                    minimap_bin, "-ax", map_preset, "--MD",
                     "-t", num_threads, ref_genome, tmp_filtered_path,
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
             sort_result = subprocess.run(
-                ["samtools", "sort", f"-@{num_threads}", "-o", aligned_bam, "-"],
+                [samtools_bin, "sort", f"-@{num_threads}", "-o", aligned_bam, "-"],
                 stdin=minimap_proc.stdout,
                 stderr=subprocess.PIPE,
                 text=True,
             )
-            _, minimap_stderr = minimap_proc.communicate()
+            minimap_proc.stdout.close()
+            minimap_proc.wait()
+            minimap_stderr = minimap_proc.stderr.read()
             if minimap_stderr:
                 log(f"[DEBUG] minimap2: {minimap_stderr.decode().strip()[:200]}")
     else:
         log("[INFO] No pre-alignment filtering")
         # BAM -> FASTQ -> align -> sort
         fastq_proc = subprocess.Popen(
-            ["samtools", "fastq", f"-@{num_threads}", current_input],
+            [samtools_bin, "fastq", f"-@{num_threads}", current_input],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
         minimap_proc = subprocess.Popen(
-            ["minimap2", "-ax", "map-ont", "--MD", "-t", num_threads, ref_genome, "-"],
+            [minimap_bin, "-ax", map_preset, "--MD", "-t", num_threads, ref_genome, "-"],
             stdin=fastq_proc.stdout,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
         subprocess.run(
-            ["samtools", "sort", f"-@{num_threads}", "-o", aligned_bam, "-"],
+            [samtools_bin, "sort", f"-@{num_threads}", "-o", aligned_bam, "-"],
             stdin=minimap_proc.stdout,
             check=True,
         )
@@ -348,6 +366,9 @@ def _process_fastq_input(
     output_dir: str,
     log: Callable[[str], None],
     report: FilterReport = None,
+    samtools_bin: str = "samtools",
+    minimap_bin: str = "minimap2",
+    map_preset: str = "map-ont",
 ) -> None:
     """Process FASTQ input: optionally filter by qs/quality, align, sort.
 
@@ -396,14 +417,14 @@ def _process_fastq_input(
             # Align filtered FASTQ
             minimap_proc = subprocess.Popen(
                 [
-                    "minimap2", "-ax", "map-ont", "--MD",
+                    minimap_bin, "-ax", map_preset, "--MD",
                     "-t", num_threads, ref_genome, current_path,
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
             subprocess.run(
-                ["samtools", "sort", f"-@{num_threads}", "-o", aligned_bam, "-"],
+                [samtools_bin, "sort", f"-@{num_threads}", "-o", aligned_bam, "-"],
                 stdin=minimap_proc.stdout,
                 check=True,
             )
@@ -412,14 +433,14 @@ def _process_fastq_input(
         log("[INFO] No pre-alignment filtering")
         minimap_proc = subprocess.Popen(
             [
-                "minimap2", "-ax", "map-ont", "--MD",
+                minimap_bin, "-ax", map_preset, "--MD",
                 "-t", num_threads, ref_genome, input_file,
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
         subprocess.run(
-            ["samtools", "sort", f"-@{num_threads}", "-o", aligned_bam, "-"],
+            [samtools_bin, "sort", f"-@{num_threads}", "-o", aligned_bam, "-"],
             stdin=minimap_proc.stdout,
             check=True,
         )

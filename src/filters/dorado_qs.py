@@ -23,24 +23,26 @@ def filter_bam_by_qs(
     tag_found = False
 
     inp = pysam.AlignmentFile(in_bam, "rb", check_sq=False)
-    out = pysam.AlignmentFile(out_bam, "wb", template=inp)
-
-    for r in inp.fetch(until_eof=True):
+    try:
+        out = pysam.AlignmentFile(out_bam, "wb", template=inp)
         try:
-            qs_value = r.get_tag("qs")
-            tag_found = True
-            if qs_value >= min_qs:
-                out.write(r)
-                passed += 1
-            else:
-                filtered += 1
-        except KeyError:
-            no_tag_count += 1
-            out.write(r)
-            passed += 1
-
-    inp.close()
-    out.close()
+            for r in inp.fetch(until_eof=True):
+                try:
+                    qs_value = r.get_tag("qs")
+                    tag_found = True
+                    if qs_value >= min_qs:
+                        out.write(r)
+                        passed += 1
+                    else:
+                        filtered += 1
+                except KeyError:
+                    no_tag_count += 1
+                    out.write(r)
+                    passed += 1
+        finally:
+            out.close()
+    finally:
+        inp.close()
 
     if not tag_found and no_tag_count > 0:
         log("[WARNING] Dorado 'qs' tag not found in any reads. " "Filter not applied.")

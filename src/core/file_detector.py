@@ -29,25 +29,35 @@ def detect_file_type(path: str) -> Tuple[FileType, List[str]]:
     if pod5_files:
         return FileType.POD5, [str(f) for f in pod5_files]
 
-    fastq_files = [f for f in files if f.suffix.lower() in [".fastq", ".fq"]]
+    fastq_files = [
+        f for f in files
+        if f.suffix.lower() in [".fastq", ".fq"]
+        or f.name.lower().endswith((".fastq.gz", ".fq.gz"))
+    ]
     if fastq_files:
         return FileType.FASTQ, [str(f) for f in fastq_files]
 
     bam_files = [f for f in files if f.suffix.lower() == ".bam"]
     if bam_files:
-        try:
-            result = subprocess.run(
-                ["samtools", "view", "-c", "-F", "4", str(bam_files[0])],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            is_aligned = int(result.stdout.strip()) > 0
-            return (
-                FileType.BAM_ALIGNED if is_aligned else FileType.BAM_UNALIGNED,
-                [str(f) for f in bam_files],
-            )
-        except Exception:
-            return FileType.BAM_UNALIGNED, [str(f) for f in bam_files]
+        # Sample up to 3 BAMs to determine alignment status
+        sample_bams = bam_files[:3]
+        aligned_count = 0
+        for bam in sample_bams:
+            try:
+                result = subprocess.run(
+                    ["samtools", "view", "-c", "-F", "4", str(bam)],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                )
+                if int(result.stdout.strip()) > 0:
+                    aligned_count += 1
+            except Exception:
+                pass
+        is_aligned = aligned_count > 0
+        return (
+            FileType.BAM_ALIGNED if is_aligned else FileType.BAM_UNALIGNED,
+            [str(f) for f in bam_files],
+        )
 
     return FileType.UNKNOWN, []

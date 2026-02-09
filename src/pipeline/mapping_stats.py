@@ -1,6 +1,7 @@
 """Compute mapping statistics and region overlap for BAM files."""
 
 import os
+import re
 import subprocess
 from typing import Callable
 
@@ -24,11 +25,13 @@ def compute_mapping_stats(
         text=True,
         check=True,
     )
-    lines = result.stdout.strip().split("\n")
+    output = result.stdout.strip()
 
-    # Line 1: total reads, Line 5: mapped reads
-    total = int(lines[0].split()[0])
-    mapped = int(lines[4].split()[0])
+    # Parse by regex to handle different samtools versions
+    total_match = re.search(r"^(\d+)\s.*(?:in total|total)", output, re.MULTILINE)
+    mapped_match = re.search(r"^(\d+)\s.*\bmapped\b", output, re.MULTILINE)
+    total = int(total_match.group(1)) if total_match else 0
+    mapped = int(mapped_match.group(1)) if mapped_match else 0
     unmapped = total - mapped
 
     stats_file = os.path.join(output_dir, f"{bam_name}_MappingStats.txt")
@@ -78,7 +81,7 @@ def compute_region_overlap(
 
     overlap_file = os.path.join(output_dir, f"{bam_name}.regions.OverlapStats.txt")
     with open(overlap_file, "w") as f:
-        f.write("GenomicMapping\tRegionsOverllaped\tRatio\n")
+        f.write("GenomicMapping\tRegionsOverlapped\tRatio\n")
         if bam_cov > 0:
             ratio = region_cov / bam_cov * 100
             f.write(f"{bam_cov}\t{region_cov}\t{ratio:.6g}(%)\n")

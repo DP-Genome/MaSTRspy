@@ -101,7 +101,8 @@ def process_locus(
                 minimap, "--MD", "-L", "-t", num_threads,
                 "-ax", map_preset, motif_fa, "-",
             ],
-            stdin=p_bamtofastq.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            stdin=p_bamtofastq.stdout, stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,  # minimap2 writes heavy progress to stderr
         )
         p_bamtofastq.stdout.close()
 
@@ -111,20 +112,25 @@ def process_locus(
         )
         p_minimap.stdout.close()
 
-        # Wait in reverse order and check return codes
+        # Drain stderr before wait() to avoid deadlock on pipe buffer
+        intersect_err = p_intersect.stderr.read()
+        bamtofastq_err = p_bamtofastq.stderr.read()
+        sort_err = p_sort.stderr.read()
+
+        # Wait in reverse order
         p_sort.wait()
         p_minimap.wait()
         p_bamtofastq.wait()
         p_intersect.wait()
 
-        for name, proc in [
-            ("bedtools intersect", p_intersect),
-            ("bedtools bamtofastq", p_bamtofastq),
-            ("minimap2", p_minimap),
-            ("samtools sort", p_sort),
+        for name, proc, err in [
+            ("bedtools intersect", p_intersect, intersect_err),
+            ("bedtools bamtofastq", p_bamtofastq, bamtofastq_err),
+            ("minimap2", p_minimap, b""),
+            ("samtools sort", p_sort, sort_err),
         ]:
             if proc.returncode != 0:
-                stderr_msg = proc.stderr.read().decode() if proc.stderr else ""
+                stderr_msg = err.decode() if err else ""
                 raise RuntimeError(f"{name} failed (rc={proc.returncode}): {stderr_msg}")
 
         subprocess.run(

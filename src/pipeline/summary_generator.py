@@ -14,6 +14,23 @@ from src.pipeline.allele_parser import (
     parse_allele_name,
 )
 
+# Regex to split locus name from the rest of the allele freq filename.
+# Filenames are {locus}_{barcode}_{...}_Allele_freqs.txt
+_LOCUS_FROM_FNAME = re.compile(r"^(.+?)_(?:barcode\d+|unclassified|[A-Za-z]+\d*_prepped)")
+
+
+def _extract_locus_from_filename(fname: str) -> str:
+    """Extract locus name from an allele frequency filename.
+
+    Handles loci with underscores (e.g., CSF1_PO) by matching up to
+    the barcode/sample portion of the filename.
+    """
+    m = _LOCUS_FROM_FNAME.match(fname)
+    if m:
+        return m.group(1)
+    # Fallback: first segment before underscore
+    return fname.split("_")[0]
+
 
 def generate_summaries(
     counting_dir: str,
@@ -105,14 +122,18 @@ def _normalize_counts(
         max_count = max(counts)
         denominator = max_count if max_count > 0 else 1
 
+    # Pre-compute noise floor once (if needed) instead of inside the loop
+    noise_floor_value = 0.0
+    if method == "noise_floor" and len(counts) >= 10:
+        sorted_counts = sorted(counts)
+        noise_idx = max(0, len(sorted_counts) // 50)  # 2nd percentile
+        noise_floor_value = sorted_counts[noise_idx] / denominator
+
     result = []
     for name, count in raw_counts:
         normalized = count / denominator
         if method == "noise_floor" and len(counts) >= 10:
-            sorted_counts = sorted(counts)
-            noise_idx = max(0, len(sorted_counts) // 50)  # 2nd percentile
-            noise_floor = sorted_counts[noise_idx] / denominator
-            normalized = max(0, normalized - noise_floor)
+            normalized = max(0, normalized - noise_floor_value)
         result.append((name, count, normalized))
 
     return result
@@ -136,7 +157,7 @@ def _generate_barcode_summary(
         )
 
         for fname in allele_files:
-            locus_name = fname.split("_")[0]
+            locus_name = _extract_locus_from_filename(fname)
             fpath = os.path.join(barcode_path, fname)
 
             with open(fpath, "r") as fin:
@@ -201,7 +222,7 @@ def _generate_barcode_profile(
         )
 
         for fname in allele_files:
-            locus_name = fname.split("_")[0]
+            locus_name = _extract_locus_from_filename(fname)
             effective_cutoff = overrides.get(locus_name, norm_cutoff)
             fpath = os.path.join(barcode_path, fname)
             total_loci += 1

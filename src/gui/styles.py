@@ -90,6 +90,23 @@ QTabBar::tab:selected {
     background-color: #0078d4;
     color: white;
 }
+QLabel#subtitleLabel {
+    color: #666666;
+}
+QLabel#helpText {
+    color: #666666;
+    font-size: 9pt;
+}
+QLabel#infoPanel {
+    background-color: #e8f4f8;
+    padding: 15px;
+    border-radius: 6px;
+}
+QLabel#legendPanel {
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+}
 """
 
 DARK_STYLE = """
@@ -186,5 +203,22 @@ QTabBar::tab {
 QTabBar::tab:selected {
     background-color: #0078d4;
     color: white;
+}
+QLabel#subtitleLabel {
+    color: #9e9e9e;
+}
+QLabel#helpText {
+    color: #9e9e9e;
+    font-size: 9pt;
+}
+QLabel#infoPanel {
+    background-color: #1a3a4a;
+    padding: 15px;
+    border-radius: 6px;
+}
+QLabel#legendPanel {
+    padding: 10px;
+    background-color: #3c3c3c;
+    border-radius: 5px;
 }
 """

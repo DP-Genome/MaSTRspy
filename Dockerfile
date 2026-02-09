@@ -52,15 +52,17 @@ ENV PATH="/opt/conda/bin:${PATH}"
 
 WORKDIR /app
 
-# Install Python dependencies first (layer caching)
+# Copy all source files needed for build
 COPY pyproject.toml ./
-RUN python3 -m pip install --no-cache-dir --upgrade pip \
-    && python3 -m pip install --no-cache-dir .
-
-# Copy application code, database, and config
 COPY src/        src/
 COPY main.py     main.py
 COPY MaSTRDB/    MaSTRDB/
 COPY config/     config/
+COPY scripts/    scripts/
+COPY logo.jpg    logo.jpg
 
-CMD ["python3", "main.py"]
+# Install Python dependencies
+RUN python3 -m pip install --no-cache-dir --upgrade pip \
+    && python3 -m pip install --no-cache-dir .
+
+CMD ["python3", "main.py", "activate"]

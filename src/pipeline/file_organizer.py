@@ -49,7 +49,7 @@ def organize_by_barcode(
 
     # 3. Sort files into barcode directories
     log("Sorting files into corresponding barcode directories...")
-    barcode_pattern = re.compile(r"(barcode\d{2})")
+    barcode_pattern = re.compile(r"(barcode\d+)")
 
     for fname in os.listdir(counting_dir):
         fpath = os.path.join(counting_dir, fname)

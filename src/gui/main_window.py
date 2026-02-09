@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QStatusBar,
 )
 
+from src import __version__
 from src.core.config import compute_thread_split
 from src.core.file_detector import FileType
 from src.core.workflow import WorkflowManager
@@ -56,8 +57,11 @@ class MainWindow(QMainWindow):
         self.file_type: FileType = FileType.UNKNOWN
         self.workflow_params = {}
         self.current_results_dir = ""
+        self.worker_thread = None
+        self.worker = None
+        self._workflow_running = False
 
-        self.setWindowTitle("MaSTRspy P1.0 - Smart Workflow Manager")
+        self.setWindowTitle(f"MaSTRspy v{__version__} - Smart Workflow Manager")
         self.setGeometry(100, 50, 1000, 800)
 
         self.stacked_widget = QStackedWidget()
@@ -284,6 +288,10 @@ class MainWindow(QMainWindow):
         self.review_page.set_review_html(review_text)
 
     def _start_workflow_execution(self):
+        if self._workflow_running:
+            return  # prevent concurrent runs
+
+        self._workflow_running = True
         self.stacked_widget.setCurrentIndex(self.PAGE_PROCESSING)
         self.processing_page.reset_stages()
 
@@ -298,9 +306,19 @@ class MainWindow(QMainWindow):
         self.worker.locus_progress.connect(self.processing_page.on_locus_progress)
         self.worker.finished.connect(self._on_workflow_finished)
         self.worker.finished.connect(self.worker_thread.quit)
-        self.worker_thread.finished.connect(self.worker_thread.deleteLater)
+        self.worker_thread.finished.connect(self._cleanup_worker)
 
         self.worker_thread.start()
+
+    def _cleanup_worker(self):
+        """Clean up worker and thread references after workflow completes."""
+        if self.worker:
+            self.worker.deleteLater()
+            self.worker = None
+        if self.worker_thread:
+            self.worker_thread.deleteLater()
+            self.worker_thread = None
+        self._workflow_running = False
 
     def _on_workflow_finished(self, return_code: int, results_dir: str):
         if return_code == 0:
@@ -311,8 +329,14 @@ class MainWindow(QMainWindow):
             self.stacked_widget.setCurrentIndex(self.PAGE_RESULTS)
             self.status_bar.showMessage("Workflow completed!")
         else:
-            QMessageBox.critical(self, "Workflow Failed", "Check the log for details.")
-            self.status_bar.showMessage("Workflow failed")
+            QMessageBox.critical(
+                self,
+                "Workflow Failed",
+                "The workflow encountered an error. Check the log for details.\n\n"
+                "You will be returned to the Review page to adjust settings and retry.",
+            )
+            self.stacked_widget.setCurrentIndex(self.PAGE_REVIEW)
+            self.status_bar.showMessage("Workflow failed — review settings and retry")
 
     def _open_results_viewer(self):
         if self.current_results_dir and os.path.exists(self.current_results_dir):
@@ -334,6 +358,21 @@ class MainWindow(QMainWindow):
     def _reset_workflow(self):
         self.workflow_params = {}
         self.current_results_dir = ""
+        self.workflow_manager = None
+        self.detected_files = []
+        self.file_type = FileType.UNKNOWN
+
+        # Clear user input on all pages
+        self.file_selection_page.input_path_edit.clear()
+        self.file_selection_page.detection_label.setText("Waiting for file selection...")
+        self.file_selection_page.file_count_label.clear()
+        self.file_selection_page.next_btn.setEnabled(False)
+        self.experiment_page.exp_name_edit.clear()
+        self.experiment_page.output_path_edit.clear()
+        self.experiment_page.workflow_summary_label.clear()
+        self.processing_page.reset_stages()
+        self.processing_page.processing_log.clear()
+
         self.stacked_widget.setCurrentIndex(self.PAGE_WELCOME)
         self.status_bar.showMessage("Ready for new analysis")
 

@@ -35,7 +35,7 @@ class WelcomePage(QWidget):
         subtitle = QLabel("Smart STR Analysis Pipeline")
         subtitle.setFont(QFont("Segoe UI", 16))
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        subtitle.setStyleSheet("color: #666666;")
+        subtitle.setObjectName("subtitleLabel")
         layout.addWidget(subtitle)
 
         layout.addSpacing(40)

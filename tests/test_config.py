@@ -235,5 +235,5 @@ class TestComputeThreadSplit:
 
     def test_1_thread_clamps_to_min(self):
         jobs, tpj = compute_thread_split(1)
-        assert jobs == 2
-        assert tpj == 1  # max(1, 1 // 2) = max(1, 0) = 1
+        assert jobs == 1  # capped to total_threads
+        assert tpj == 1

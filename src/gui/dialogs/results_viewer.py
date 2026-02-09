@@ -82,9 +82,7 @@ class ResultsViewerDialog(QDialog):
             "FLAGGED = Below threshold (possible artifact/stutter)"
         )
         legend_label.setWordWrap(True)
-        legend_label.setStyleSheet(
-            "padding: 10px; background-color: #f0f0f0; border-radius: 5px;"
-        )
+        legend_label.setObjectName("legendPanel")
         profiles_layout.addWidget(legend_label)
 
         self.tabs.addTab(profiles_widget, "Barcode Profiles")

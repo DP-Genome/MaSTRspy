@@ -154,11 +154,13 @@ def generate_profile_plot(
         col = idx % cols
         axes[row][col].set_visible(False)
 
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
-    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-    fig.savefig(output_path, dpi=150, bbox_inches="tight")
-    plt.close(fig)
-    return True
+    try:
+        plt.tight_layout(rect=[0, 0, 1, 0.95])
+        os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+        fig.savefig(output_path, dpi=150, bbox_inches="tight")
+        return True
+    finally:
+        plt.close(fig)
 
 
 def run_python_plots(

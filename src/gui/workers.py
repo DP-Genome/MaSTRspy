@@ -124,17 +124,25 @@ class FullWorkflowWorker(QObject):
                 prepped_dir = os.path.join(exp_output_dir, "3_prepped")
                 os.makedirs(prepped_dir, exist_ok=True)
 
+                # Load tool paths from ToolsConfig.txt
+                from src.core.config import load_tools_config
+                tools_config = os.path.join(self.project_dir, "config", "ToolsConfig.txt")
+                tools = load_tools_config(tools_config) if os.path.exists(tools_config) else {}
+
                 prep_params = {
                     "input_dir": input_for_prepping,
                     "output_dir": prepped_dir,
                     "ref_genome": p["ref_genome"],
                     "exp_name": p["exp_name"],
                     "input_type": p.get("input_type", "bam"),
+                    "read_type": p.get("read_type", "ont"),
                     "num_threads": p.get("num_threads", 16),  # (#4)
                     "min_dorado_q": p.get("min_dorado_q", 0),
                     "min_mean_q": p.get("min_mean_q", 0),
                     "min_len": p.get("min_len", 0),
                     "min_acc": p.get("min_acc", 0),
+                    "samtools": tools.get("SAMTOOLS", "samtools"),
+                    "minimap": tools.get("MINIMAP", "minimap2"),
                 }
 
                 reports = run_prepping(prep_params, log=log)

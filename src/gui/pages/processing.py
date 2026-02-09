@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.gui.logo import LogoManager
+from src.gui.page_utils import create_page_header
 
 
 class ProcessingPage(QWidget):
@@ -21,7 +22,7 @@ class ProcessingPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 30, 40, 30)
 
-        layout.addLayout(_create_page_header(logo_manager, "Processing"))
+        layout.addLayout(create_page_header(logo_manager, "Processing"))
         layout.addSpacing(20)
 
         self.processing_status = QLabel("Initializing workflow...")
@@ -53,7 +54,7 @@ class ProcessingPage(QWidget):
         log_layout = QVBoxLayout(log_group)
         self.processing_log = QTextEdit()
         self.processing_log.setReadOnly(True)
-        self.processing_log.setMaximumHeight(200)
+        self.processing_log.setMinimumHeight(200)
         log_layout.addWidget(self.processing_log)
         layout.addWidget(log_group)
 
@@ -91,20 +92,3 @@ class ProcessingPage(QWidget):
         self.processing_log.verticalScrollBar().setValue(
             self.processing_log.verticalScrollBar().maximum()
         )
-
-
-def _create_page_header(logo_manager: LogoManager, title: str) -> QHBoxLayout:
-    header = QHBoxLayout()
-    mastrspy = logo_manager.create_logo_label("mastrspy", 40)
-    header.addWidget(mastrspy)
-
-    title_label = QLabel(title)
-    title_label.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-    header.addWidget(title_label)
-
-    header.addStretch()
-
-    malslabs = logo_manager.create_logo_label("malslabs", 40)
-    header.addWidget(malslabs)
-
-    return header

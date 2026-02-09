@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.gui.logo import LogoManager
+from src.gui.page_utils import create_page_header
 
 
 class ReviewPage(QWidget):
@@ -23,7 +24,7 @@ class ReviewPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 30, 40, 30)
 
-        layout.addLayout(_create_page_header(logo_manager, "Review & Confirm"))
+        layout.addLayout(create_page_header(logo_manager, "Review & Confirm"))
         layout.addSpacing(20)
 
         info_label = QLabel("Review your settings before starting:")
@@ -52,20 +53,3 @@ class ReviewPage(QWidget):
 
     def set_review_html(self, html: str):
         self.review_text.setHtml(html)
-
-
-def _create_page_header(logo_manager: LogoManager, title: str) -> QHBoxLayout:
-    header = QHBoxLayout()
-    mastrspy = logo_manager.create_logo_label("mastrspy", 40)
-    header.addWidget(mastrspy)
-
-    title_label = QLabel(title)
-    title_label.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-    header.addWidget(title_label)
-
-    header.addStretch()
-
-    malslabs = logo_manager.create_logo_label("malslabs", 40)
-    header.addWidget(malslabs)
-
-    return header

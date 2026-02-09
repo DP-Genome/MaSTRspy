@@ -6,9 +6,11 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
+    QHBoxLayout,
     QHeaderView,
     QLabel,
     QMessageBox,
+    QPushButton,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -46,6 +48,18 @@ class LociOverridesDialog(QDialog):
         )
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         layout.addWidget(self.table)
+
+        row_btn_layout = QHBoxLayout()
+        add_row_btn = QPushButton("Add Row")
+        add_row_btn.clicked.connect(self._add_row)
+        row_btn_layout.addWidget(add_row_btn)
+
+        remove_row_btn = QPushButton("Remove Row")
+        remove_row_btn.clicked.connect(self._remove_row)
+        row_btn_layout.addWidget(remove_row_btn)
+
+        row_btn_layout.addStretch()
+        layout.addLayout(row_btn_layout)
 
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -87,6 +101,18 @@ class LociOverridesDialog(QDialog):
 
             item_cutoff = QTableWidgetItem(str(cutoff))
             self.table.setItem(r, 1, item_cutoff)
+
+    def _add_row(self):
+        row = self.table.rowCount()
+        self.table.insertRow(row)
+        self.table.setItem(row, 0, QTableWidgetItem(""))
+        self.table.setItem(row, 1, QTableWidgetItem("0.10"))
+        self.table.editItem(self.table.item(row, 0))
+
+    def _remove_row(self):
+        selected = self.table.currentRow()
+        if selected >= 0:
+            self.table.removeRow(selected)
 
     def _on_accept(self):
         updated_rows = []

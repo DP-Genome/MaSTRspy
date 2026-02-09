@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from src.core.config import compute_thread_split
 from src.gui.dialogs.overrides_editor import LociOverridesDialog
 from src.gui.logo import LogoManager
+from src.gui.page_utils import create_page_header
 
 
 class AnalysisOptionsPage(QWidget):
@@ -35,7 +36,7 @@ class AnalysisOptionsPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 30, 40, 30)
 
-        layout.addLayout(_create_page_header(logo_manager, "Analysis Options"))
+        layout.addLayout(create_page_header(logo_manager, "Analysis Options"))
         layout.addSpacing(20)
 
         ref_group = QGroupBox("Reference Genome")
@@ -94,7 +95,7 @@ class AnalysisOptionsPage(QWidget):
         help_text = QLabel(
             "Overrides TSV format: <locus><TAB><cutoff>\n" "Example: DYS458<TAB>0.15"
         )
-        help_text.setStyleSheet("color: #666666; font-size: 9pt;")
+        help_text.setObjectName("helpText")
         norm_layout.addWidget(help_text)
 
         layout.addWidget(norm_group)
@@ -117,7 +118,7 @@ class AnalysisOptionsPage(QWidget):
         perf_layout.addLayout(threads_layout)
 
         thread_help = QLabel("Controls parallelism for the analysis stage")
-        thread_help.setStyleSheet("color: #666666; font-size: 9pt;")
+        thread_help.setObjectName("helpText")
         perf_layout.addWidget(thread_help)
 
         perf_layout.addSpacing(10)
@@ -132,7 +133,7 @@ class AnalysisOptionsPage(QWidget):
         snv_help = QLabel(
             "Optional: calls SNVs per locus. Does not affect STR genotyping."
         )
-        snv_help.setStyleSheet("color: #666666; font-size: 9pt;")
+        snv_help.setObjectName("helpText")
         perf_layout.addWidget(snv_help)
 
         layout.addWidget(perf_group)
@@ -243,20 +244,3 @@ class AnalysisOptionsPage(QWidget):
         self.thread_split_label.setText(
             f"\u2192 {jobs} jobs \u00d7 {tpj} threads each"
         )
-
-
-def _create_page_header(logo_manager: LogoManager, title: str) -> QHBoxLayout:
-    header = QHBoxLayout()
-    mastrspy = logo_manager.create_logo_label("mastrspy", 40)
-    header.addWidget(mastrspy)
-
-    title_label = QLabel(title)
-    title_label.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-    header.addWidget(title_label)
-
-    header.addStretch()
-
-    malslabs = logo_manager.create_logo_label("malslabs", 40)
-    header.addWidget(malslabs)
-
-    return header

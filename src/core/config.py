@@ -41,11 +41,13 @@ def compute_thread_split(total_threads: int) -> tuple:
 
     >= 64 threads: 8 parallel jobs
     <  64 threads: 2 parallel jobs
+    Always caps jobs to total_threads so we never over-subscribe.
     """
     if total_threads >= 64:
         jobs = 8
     else:
         jobs = 2
+    jobs = min(jobs, total_threads)
     threads_per_job = max(1, total_threads // jobs)
     return jobs, threads_per_job
 
@@ -102,79 +104,71 @@ def generate_input_config(
     params: Dict,
     master_config_path: Optional[str] = None,
 ) -> str:
-    """Generate an InputConfig.txt content string with updated paths and params."""
+    """Generate an InputConfig.txt content string with updated paths and params.
+
+    All GUI-provided params override master config values so that
+    STR_FASTA, STR_BED, GENOME_FASTA, REGION_BED, and READ_TYPE
+    are never stale developer paths.
+    """
     norm_cutoff = params.get("norm_cutoff", 0.10)
     norm_cutoff_overrides = params.get("norm_cutoff_overrides", "")
     total_threads = params.get("num_threads", 16)
     num_jobs, threads_per_job = compute_thread_split(total_threads)
     enable_snv = "yes" if params.get("enable_snv", False) else "no"
+    read_type = params.get("read_type", "ont")
+    str_fasta = params.get("str_fasta", "")
+    str_bed = params.get("str_bed", "")
+    genome_fasta = params.get("genome_fasta", "")
+    region_bed = params.get("region_bed", "")
+
+    # Map of keys the GUI always overrides
+    overrides_map = {
+        "INPUT_DIR": f'"{input_dir}"',
+        "OUTPUT_DIR": f'"{output_dir}"',
+        "INPUT_BAM": '"yes"',
+        "NORM_CUTOFF": str(norm_cutoff),
+        "NUM_PARALLEL_JOBS": str(num_jobs),
+        "NUM_THREADS": str(threads_per_job),
+        "ENABLE_SNV": enable_snv,
+        "READ_TYPE": read_type,
+    }
+    if norm_cutoff_overrides:
+        overrides_map["NORM_CUTOFF_OVERRIDES"] = f'"{norm_cutoff_overrides}"'
+    else:
+        overrides_map["NORM_CUTOFF_OVERRIDES"] = ""
+    if str_fasta:
+        overrides_map["STR_FASTA"] = str_fasta
+    if str_bed:
+        overrides_map["STR_BED"] = str_bed
+    if genome_fasta:
+        overrides_map["GENOME_FASTA"] = genome_fasta
+    if region_bed:
+        overrides_map["REGION_BED"] = region_bed
 
     if master_config_path and os.path.exists(master_config_path):
         with open(master_config_path, "r") as f:
             lines = f.readlines()
 
         new_lines = []
-        saw_norm_cutoff = False
-        saw_norm_overrides = False
-        saw_num_parallel_jobs = False
-        saw_num_threads = False
-        saw_enable_snv = False
+        seen_keys = set()
 
         for line in lines:
-            if re.match(r"^\s*INPUT_DIR=", line):
-                new_lines.append(f'INPUT_DIR="{input_dir}"\n')
-            elif re.match(r"^\s*OUTPUT_DIR=", line):
-                new_lines.append(f'OUTPUT_DIR="{output_dir}"\n')
-            elif re.match(r"^\s*INPUT_BAM=", line):
-                new_lines.append('INPUT_BAM="yes"\n')
-            elif re.match(r"^\s*NORM_CUTOFF=", line):
-                saw_norm_cutoff = True
-                new_lines.append(f"NORM_CUTOFF={norm_cutoff}\n")
-            elif re.match(r"^\s*NORM_CUTOFF_OVERRIDES=", line):
-                saw_norm_overrides = True
-                if norm_cutoff_overrides:
-                    new_lines.append(
-                        f'NORM_CUTOFF_OVERRIDES="{norm_cutoff_overrides}"\n'
-                    )
-                else:
-                    new_lines.append("NORM_CUTOFF_OVERRIDES=\n")
-            elif re.match(r"^\s*NUM_PARALLEL_JOBS=", line):
-                saw_num_parallel_jobs = True
-                new_lines.append(f"NUM_PARALLEL_JOBS={num_jobs}\n")
-            elif re.match(r"^\s*NUM_THREADS=", line):
-                saw_num_threads = True
-                new_lines.append(f"NUM_THREADS={threads_per_job}\n")
-            elif re.match(r"^\s*ENABLE_SNV=", line):
-                saw_enable_snv = True
-                new_lines.append(f"ENABLE_SNV={enable_snv}\n")
-            else:
+            matched = False
+            for key, value in overrides_map.items():
+                if re.match(rf"^\s*{key}=", line):
+                    new_lines.append(f"{key}={value}\n")
+                    seen_keys.add(key)
+                    matched = True
+                    break
+            if not matched:
                 new_lines.append(line)
 
-        if not saw_norm_cutoff:
-            new_lines.append(f"NORM_CUTOFF={norm_cutoff}\n")
-        if not saw_norm_overrides:
-            if norm_cutoff_overrides:
-                new_lines.append(f'NORM_CUTOFF_OVERRIDES="{norm_cutoff_overrides}"\n')
-            else:
-                new_lines.append("NORM_CUTOFF_OVERRIDES=\n")
-        if not saw_num_parallel_jobs:
-            new_lines.append(f"NUM_PARALLEL_JOBS={num_jobs}\n")
-        if not saw_num_threads:
-            new_lines.append(f"NUM_THREADS={threads_per_job}\n")
-        if not saw_enable_snv:
-            new_lines.append(f"ENABLE_SNV={enable_snv}\n")
+        # Append any keys not found in the master config
+        for key, value in overrides_map.items():
+            if key not in seen_keys:
+                new_lines.append(f"{key}={value}\n")
 
         return "".join(new_lines)
     else:
-        config_str = (
-            f'INPUT_DIR="{input_dir}"\n'
-            f'OUTPUT_DIR="{output_dir}"\n'
-            f'INPUT_BAM="yes"\n'
-            f"NORM_CUTOFF={norm_cutoff}\n"
-            f"NUM_PARALLEL_JOBS={num_jobs}\n"
-            f"NUM_THREADS={threads_per_job}\n"
-            f"ENABLE_SNV={enable_snv}\n"
-        )
-        if norm_cutoff_overrides:
-            config_str += f'NORM_CUTOFF_OVERRIDES="{norm_cutoff_overrides}"\n'
-        return config_str
+        lines = [f"{key}={value}\n" for key, value in overrides_map.items()]
+        return "".join(lines)

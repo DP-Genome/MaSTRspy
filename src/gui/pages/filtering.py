@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 
 from src.core.config import FILTER_PRESETS
 from src.gui.logo import LogoManager
+from src.gui.page_utils import create_page_header
 
 
 class FilteringPage(QWidget):
@@ -27,7 +28,7 @@ class FilteringPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 30, 40, 30)
 
-        layout.addLayout(_create_page_header(logo_manager, "Filtering Options"))
+        layout.addLayout(create_page_header(logo_manager, "Filtering Options"))
         layout.addSpacing(20)
 
         preset_group = QGroupBox("Filter Presets")
@@ -124,20 +125,3 @@ class FilteringPage(QWidget):
 
     def get_min_acc(self) -> float:
         return self.min_acc_slider.value() / 100
-
-
-def _create_page_header(logo_manager: LogoManager, title: str) -> QHBoxLayout:
-    header = QHBoxLayout()
-    mastrspy = logo_manager.create_logo_label("mastrspy", 40)
-    header.addWidget(mastrspy)
-
-    title_label = QLabel(title)
-    title_label.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-    header.addWidget(title_label)
-
-    header.addStretch()
-
-    malslabs = logo_manager.create_logo_label("malslabs", 40)
-    header.addWidget(malslabs)
-
-    return header

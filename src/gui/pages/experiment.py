@@ -1,6 +1,7 @@
 """Experiment name and output directory page."""
 
 import os
+import re
 
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QFont
@@ -17,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.gui.logo import LogoManager
+from src.gui.page_utils import create_page_header
 
 
 class ExperimentPage(QWidget):
@@ -28,7 +30,7 @@ class ExperimentPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 30, 40, 30)
 
-        layout.addLayout(_create_page_header(logo_manager, "Experiment Setup"))
+        layout.addLayout(create_page_header(logo_manager, "Experiment Setup"))
         layout.addSpacing(20)
 
         name_group = QGroupBox("Experiment Information")
@@ -58,9 +60,7 @@ class ExperimentPage(QWidget):
 
         self.workflow_summary_label = QLabel()
         self.workflow_summary_label.setWordWrap(True)
-        self.workflow_summary_label.setStyleSheet(
-            "background-color: #e8f4f8; padding: 15px; border-radius: 6px;"
-        )
+        self.workflow_summary_label.setObjectName("infoPanel")
         layout.addWidget(self.workflow_summary_label)
 
         layout.addStretch()
@@ -86,9 +86,18 @@ class ExperimentPage(QWidget):
             self.output_path_edit.setText(path)
 
     def _validate_and_next(self):
-        if not self.exp_name_edit.text().strip():
+        exp_name = self.exp_name_edit.text().strip()
+        if not exp_name:
             QMessageBox.warning(
                 self, "Missing Info", "Please enter an experiment name."
+            )
+            return
+        if not re.match(r"^[A-Za-z0-9_\-\.]+$", exp_name):
+            QMessageBox.warning(
+                self,
+                "Invalid Name",
+                "Experiment name can only contain letters, numbers, "
+                "underscores, hyphens, and dots.",
             )
             return
         if not self.output_path_edit.text():
@@ -106,20 +115,3 @@ class ExperimentPage(QWidget):
 
     def get_output_dir(self) -> str:
         return self.output_path_edit.text()
-
-
-def _create_page_header(logo_manager: LogoManager, title: str) -> QHBoxLayout:
-    header = QHBoxLayout()
-    mastrspy = logo_manager.create_logo_label("mastrspy", 40)
-    header.addWidget(mastrspy)
-
-    title_label = QLabel(title)
-    title_label.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-    header.addWidget(title_label)
-
-    header.addStretch()
-
-    malslabs = logo_manager.create_logo_label("malslabs", 40)
-    header.addWidget(malslabs)
-
-    return header

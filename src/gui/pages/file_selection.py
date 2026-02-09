@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from src.core.file_detector import FileType, detect_file_type
 from src.gui.logo import LogoManager
+from src.gui.page_utils import create_page_header
 
 
 class FileSelectionPage(QWidget):
@@ -29,7 +30,7 @@ class FileSelectionPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 30, 40, 30)
 
-        layout.addLayout(_create_page_header(logo_manager, "Select Input Files"))
+        layout.addLayout(create_page_header(logo_manager, "Select Input Files"))
         layout.addSpacing(20)
 
         instructions = QLabel(
@@ -118,22 +119,3 @@ class FileSelectionPage(QWidget):
 
     def get_input_path(self) -> str:
         return self.input_path_edit.text()
-
-
-def _create_page_header(logo_manager: LogoManager, title: str) -> QHBoxLayout:
-    from PySide6.QtGui import QFont
-
-    header = QHBoxLayout()
-    mastrspy = logo_manager.create_logo_label("mastrspy", 40)
-    header.addWidget(mastrspy)
-
-    title_label = QLabel(title)
-    title_label.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-    header.addWidget(title_label)
-
-    header.addStretch()
-
-    malslabs = logo_manager.create_logo_label("malslabs", 40)
-    header.addWidget(malslabs)
-
-    return header

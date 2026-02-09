@@ -77,40 +77,42 @@ def filter_bam_by_accuracy(
     total_processed = 0
 
     inp = pysam.AlignmentFile(in_bam, "rb")
-    out = pysam.AlignmentFile(out_bam, "wb", template=inp)
+    try:
+        out = pysam.AlignmentFile(out_bam, "wb", template=inp)
+        try:
+            for r in inp.fetch(until_eof=True):
+                total_processed += 1
 
-    for r in inp.fetch(until_eof=True):
-        total_processed += 1
+                if total_processed % progress_interval == 0:
+                    log(
+                        f"[bam_accuracy_filter] Processed {total_processed:,} reads "
+                        f"(passed: {passed:,}, filtered: {filtered:,})..."
+                    )
 
-        if total_processed % progress_interval == 0:
-            log(
-                f"[bam_accuracy_filter] Processed {total_processed:,} reads "
-                f"(passed: {passed:,}, filtered: {filtered:,})..."
-            )
-
-        if r.is_unmapped:
-            skipped += 1
-            continue
-        md = _get_matches_mismatches_from_md(r)
-        cd = _get_ins_del_from_cigar(r)
-        if md is None or cd is None:
-            skipped += 1
-            continue
-        matches, mismatches = md
-        ins, dels = cd
-        denom = matches + mismatches + ins + dels
-        if denom == 0:
-            skipped += 1
-            continue
-        acc = matches / denom
-        if acc >= min_acc:
-            out.write(r)
-            passed += 1
-        else:
-            filtered += 1
-
-    inp.close()
-    out.close()
+                if r.is_unmapped:
+                    skipped += 1
+                    continue
+                md = _get_matches_mismatches_from_md(r)
+                cd = _get_ins_del_from_cigar(r)
+                if md is None or cd is None:
+                    skipped += 1
+                    continue
+                matches, mismatches = md
+                ins, dels = cd
+                denom = matches + mismatches + ins + dels
+                if denom == 0:
+                    skipped += 1
+                    continue
+                acc = matches / denom
+                if acc >= min_acc:
+                    out.write(r)
+                    passed += 1
+                else:
+                    filtered += 1
+        finally:
+            out.close()
+    finally:
+        inp.close()
 
     log(
         f"[bam_accuracy_filter] Complete: {total_processed:,} total, "
