@@ -253,7 +253,10 @@ def _process_bam_input(
             f"[INFO] Applying pre-alignment filters "
             f"(min-mean-q={min_mean_q}, min-len={min_len})"
         )
-        with _temp_files([".fastq", ".fastq"], output_dir) as (tmp_fq_path, tmp_filtered_path):
+        with _temp_files([".fastq", ".fastq"], output_dir) as (
+            tmp_fq_path,
+            tmp_filtered_path,
+        ):
             # samtools fastq
             with open(tmp_fq_path, "w") as fq_out:
                 result = subprocess.run(
@@ -266,20 +269,28 @@ def _process_bam_input(
                     log(f"[DEBUG] samtools fastq: {result.stderr.strip()}")
 
             # fastq filter
-            stats = filter_fastq(tmp_fq_path, tmp_filtered_path, min_mean_q, min_len, log)
+            stats = filter_fastq(
+                tmp_fq_path, tmp_filtered_path, min_mean_q, min_len, log
+            )
             if report:
                 report.add_stage("fastq_quality", stats)
 
             # minimap2 | samtools sort
             minimap_proc = subprocess.Popen(
                 [
-                    "minimap2", "-ax", "map-ont", "--MD",
-                    "-t", num_threads, ref_genome, tmp_filtered_path,
+                    "minimap2",
+                    "-ax",
+                    "map-ont",
+                    "--MD",
+                    "-t",
+                    num_threads,
+                    ref_genome,
+                    tmp_filtered_path,
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
-            sort_result = subprocess.run(
+            subprocess.run(
                 ["samtools", "sort", f"-@{num_threads}", "-o", aligned_bam, "-"],
                 stdin=minimap_proc.stdout,
                 stderr=subprocess.PIPE,
@@ -371,8 +382,14 @@ def _process_fastq_input(
             # Align filtered FASTQ
             minimap_proc = subprocess.Popen(
                 [
-                    "minimap2", "-ax", "map-ont", "--MD",
-                    "-t", num_threads, ref_genome, current_path,
+                    "minimap2",
+                    "-ax",
+                    "map-ont",
+                    "--MD",
+                    "-t",
+                    num_threads,
+                    ref_genome,
+                    current_path,
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -387,8 +404,14 @@ def _process_fastq_input(
         log("[INFO] No pre-alignment filtering")
         minimap_proc = subprocess.Popen(
             [
-                "minimap2", "-ax", "map-ont", "--MD",
-                "-t", num_threads, ref_genome, input_file,
+                "minimap2",
+                "-ax",
+                "map-ont",
+                "--MD",
+                "-t",
+                num_threads,
+                ref_genome,
+                input_file,
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

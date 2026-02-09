@@ -56,9 +56,7 @@ def filter_bam_by_qs(
 
 # (#7) Improved regex: handles qs:f:12.5, qs:i:12, qs=12.5, qs=f:12.5
 # Also handles scientific notation (e.g., qs:f:1.2e1) and negative values
-_QS_PATTERN = re.compile(
-    r"qs[:=](?:[fi]:)?(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)"
-)
+_QS_PATTERN = re.compile(r"qs[:=](?:[fi]:)?(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)")
 
 
 def filter_fastq_by_qs(

@@ -240,9 +240,7 @@ class AnalysisOptionsPage(QWidget):
     def _update_thread_split_label(self):
         total = self.threads_spin.value()
         jobs, tpj = compute_thread_split(total)
-        self.thread_split_label.setText(
-            f"\u2192 {jobs} jobs \u00d7 {tpj} threads each"
-        )
+        self.thread_split_label.setText(f"\u2192 {jobs} jobs \u00d7 {tpj} threads each")
 
 
 def _create_page_header(logo_manager: LogoManager, title: str) -> QHBoxLayout:

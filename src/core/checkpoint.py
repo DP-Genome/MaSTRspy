@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Set
 
 
 class CheckpointManager:
@@ -94,10 +94,7 @@ class CheckpointManager:
         Returns:
             list of jobs not yet completed.
         """
-        return [
-            job for job in all_jobs
-            if not self.is_locus_complete(job[0], job[1])
-        ]
+        return [job for job in all_jobs if not self.is_locus_complete(job[0], job[1])]
 
     @property
     def completed_loci_count(self) -> int:

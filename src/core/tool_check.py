@@ -5,7 +5,6 @@ import subprocess
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional
 
-
 REQUIRED_TOOLS = {
     "samtools": {"flag": "--version", "description": "SAM/BAM file manipulation"},
     "bedtools": {"flag": "--version", "description": "BED file operations"},

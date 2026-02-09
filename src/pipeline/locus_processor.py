@@ -45,8 +45,8 @@ def process_locus(
     str_fasta_dir = config["str_fasta"]
     read_type = config.get("read_type", "ont")
     num_threads = str(config.get("num_threads", 16))
-    norm_cutoff = config.get("norm_cutoff", 0.1)
-    overrides = config.get("overrides", {})
+    config.get("norm_cutoff", 0.1)
+    config.get("overrides", {})
 
     bedtools = config.get("bedtools", "bedtools")
     samtools = config.get("samtools", "samtools")
@@ -112,9 +112,17 @@ def process_locus(
         map_preset = "map-ont" if read_type == "ont" else "map-pb"
         proc = subprocess.run(
             [
-                minimap, "--MD", "-L", "-t", num_threads,
-                "-ax", map_preset, motif_fa, intersected_fq,
-                "-o", motif_mapped_sam,
+                minimap,
+                "--MD",
+                "-L",
+                "-t",
+                num_threads,
+                "-ax",
+                map_preset,
+                motif_fa,
+                intersected_fq,
+                "-o",
+                motif_mapped_sam,
             ],
             stderr=subprocess.PIPE,
             text=True,
@@ -126,15 +134,18 @@ def process_locus(
         log("## Step 3/5: Sorting and indexing motif alignments...")
         subprocess.run(
             [samtools, "view", "-S", "-b", motif_mapped_sam, "-o", motif_mapped_bam],
-            check=True, stderr=subprocess.PIPE,
+            check=True,
+            stderr=subprocess.PIPE,
         )
         subprocess.run(
             [samtools, "sort", "-o", motif_mapped_sorted_bam, motif_mapped_bam],
-            check=True, stderr=subprocess.PIPE,
+            check=True,
+            stderr=subprocess.PIPE,
         )
         subprocess.run(
             [samtools, "index", motif_mapped_sorted_bam],
-            check=True, stderr=subprocess.PIPE,
+            check=True,
+            stderr=subprocess.PIPE,
         )
 
         # Step 4: Call SNVs with xatlas (optional, non-fatal)
@@ -146,15 +157,24 @@ def process_locus(
                 snv_prefix = os.path.join(snv_dir, f"{bed_fname}_{bam_name}")
                 proc = subprocess.run(
                     [
-                        xatlas, "-r", motif_fa, "-i", motif_mapped_sorted_bam,
-                        "-s", snv_prefix, "-p", snv_prefix,
+                        xatlas,
+                        "-r",
+                        motif_fa,
+                        "-i",
+                        motif_mapped_sorted_bam,
+                        "-s",
+                        snv_prefix,
+                        "-p",
+                        snv_prefix,
                     ],
                     stderr=subprocess.PIPE,
                     text=True,
                 )
                 if proc.returncode != 0:
-                    log(f"[WARNING] xatlas failed for {bed_fname}/{bam_name}: "
-                        f"{proc.stderr.strip()}")
+                    log(
+                        f"[WARNING] xatlas failed for {bed_fname}/{bam_name}: "
+                        f"{proc.stderr.strip()}"
+                    )
             except Exception as e:
                 log(f"[WARNING] xatlas skipped for {bed_fname}/{bam_name}: {e}")
         else:
@@ -204,8 +224,10 @@ def process_locus(
 
         result["status"] = "success"
         result["allele_count"] = len(parsed_alleles)
-        log(f"## Done processing locus {bed_fname} for sample {bam_name}. "
-            f"({len(parsed_alleles)} alleles)")
+        log(
+            f"## Done processing locus {bed_fname} for sample {bam_name}. "
+            f"({len(parsed_alleles)} alleles)"
+        )
 
     except Exception as e:
         result["status"] = "failed"
@@ -214,7 +236,12 @@ def process_locus(
 
     finally:
         # Clean up temp files (#16)
-        for tmp in [intersected_bam, intersected_fq, motif_mapped_sam, motif_mapped_bam]:
+        for tmp in [
+            intersected_bam,
+            intersected_fq,
+            motif_mapped_sam,
+            motif_mapped_bam,
+        ]:
             if os.path.exists(tmp):
                 os.remove(tmp)
         if owns_temp and os.path.isdir(temp_dir):

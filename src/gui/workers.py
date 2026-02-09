@@ -20,7 +20,7 @@ from src.core.logging_config import (
     write_log_header,
 )
 from src.core.validation import validate_pipeline_inputs
-from src.pipeline.analysis import run_analysis, run_analysis_direct
+from src.pipeline.analysis import run_analysis
 from src.pipeline.prepping import run_prepping
 from src.pipeline.workflow_plan import build_workflow_plan
 
@@ -38,7 +38,6 @@ class FullWorkflowWorker(QObject):
 
     def run(self):
         start_time = time.time()
-        success = False
         results_dir = ""
         logger = None
 
@@ -80,7 +79,9 @@ class FullWorkflowWorker(QObject):
                 basecalled_bam = os.path.join(exp_output_dir, "1_basecalled.bam")
 
                 cmd = ["dorado", "basecaller", p["model_path"], p["input_path"]]
-                if not self._run_stage(cmd, basecalled_bam, log=log, is_basecaller=True):
+                if not self._run_stage(
+                    cmd, basecalled_bam, log=log, is_basecaller=True
+                ):
                     write_log_footer(logger, start_time, success=False)
                     close_logging(logger)
                     self.finished.emit(1, "")
@@ -174,7 +175,6 @@ class FullWorkflowWorker(QObject):
                 os.remove(input_config_path)
 
             self.stage_complete.emit("Analysis")
-            success = True
             write_log_footer(logger, start_time, success=True, results_dir=results_dir)
             close_logging(logger)
             self.finished.emit(0, results_dir)

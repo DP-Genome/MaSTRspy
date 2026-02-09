@@ -29,7 +29,8 @@ def organize_by_barcode(
 
     # 1. Remove legacy Toptwo.txt files (#12: no longer generated, but clean up old ones)
     toptwo_files = [
-        f for f in os.listdir(counting_dir)
+        f
+        for f in os.listdir(counting_dir)
         if f.endswith("Toptwo.txt") and os.path.isfile(os.path.join(counting_dir, f))
     ]
     if toptwo_files:

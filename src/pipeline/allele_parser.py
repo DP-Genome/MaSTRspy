@@ -14,7 +14,6 @@ import re
 from dataclasses import dataclass
 from typing import List, Optional
 
-
 # Pattern to extract CE number: CE followed by digits (optionally with decimal)
 _CE_PATTERN = re.compile(r"CE(\d+(?:\.\d+)?)")
 
