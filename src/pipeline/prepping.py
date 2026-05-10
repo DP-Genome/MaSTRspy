@@ -51,6 +51,56 @@ def _extract_barcode_name(sample_name: str, log: Callable[[str], None]) -> str:
     return sample_name
 
 
+def _collect_bam_samples(
+    input_path: Path,
+    log: Callable[[str], None],
+    samtools_bin: str,
+    output_dir: str,
+) -> "List[tuple[Path, str]]":
+    """Return (file_path, barcode_name) pairs for all BAM input.
+
+    Tries a flat glob first (user-supplied demuxed folder with one BAM per
+    sample). If nothing is found, falls back to rglob to handle the nested
+    directory structure that dorado demux creates:
+        <out>/<run>/<sample>/<acq_id>/bam_pass/<barcodeXX>/<file>.bam
+
+    When multiple chunk files land in the same barcode subdirectory they are
+    merged via `samtools merge` before returning, so downstream code always
+    sees exactly one BAM per barcode.
+    """
+    flat = sorted(input_path.glob("*.bam"))
+    if flat:
+        return [(f, _extract_barcode_name(f.stem, log)) for f in flat]
+
+    nested = sorted(input_path.rglob("*.bam"))
+    if not nested:
+        return []
+
+    # Group by the immediate parent directory name, which dorado sets to the
+    # barcode name (e.g. "barcode04", "unclassified").
+    groups: Dict[str, List[Path]] = {}
+    for f in nested:
+        key = f.parent.name
+        groups.setdefault(key, []).append(f)
+
+    result: "List[tuple[Path, str]]" = []
+    for barcode_dir, files in sorted(groups.items()):
+        if len(files) == 1:
+            result.append((files[0], barcode_dir))
+        else:
+            merged = Path(output_dir) / f"{barcode_dir}_merged.bam"
+            log(f"[INFO] Merging {len(files)} chunk(s) for {barcode_dir}")
+            subprocess.run(
+                [samtools_bin, "merge", "-f", str(merged)]
+                + [str(f) for f in files],
+                check=True,
+                stderr=subprocess.PIPE,
+            )
+            result.append((merged, barcode_dir))
+
+    return result
+
+
 @contextmanager
 def _temp_files(suffixes: List[str], directory: str):
     """Context manager for temporary files with guaranteed cleanup (#16)."""
@@ -132,31 +182,26 @@ def run_prepping(
     # Find input files
     input_path = Path(input_dir)
     if input_type == "bam":
-        input_files = sorted(input_path.glob("*.bam"))
+        samples = _collect_bam_samples(input_path, log, samtools_bin, output_dir)
+        if not samples:
+            log(f"[ERROR] No bam files found in {input_dir}")
+            return filter_reports
     else:
-        input_files = sorted(
+        flat_fq = sorted(
             list(input_path.glob("*.fastq")) + list(input_path.glob("*.fq"))
         )
-
-    if not input_files:
-        log(f"[ERROR] No {input_type} files found in {input_dir}")
-        return filter_reports
+        if not flat_fq:
+            flat_fq = sorted(
+                list(input_path.rglob("*.fastq")) + list(input_path.rglob("*.fq"))
+            )
+        if not flat_fq:
+            log(f"[ERROR] No fastq files found in {input_dir}")
+            return filter_reports
+        samples = [(f, f.stem) for f in flat_fq]
 
     # Process samples sequentially to avoid pipe failures in concurrent chains
-    for input_file in input_files:
+    for input_file, barcode_name in samples:
         file_basename = input_file.name
-
-        # Extract sample name (remove extension)
-        if input_type == "bam":
-            sample_name = input_file.stem
-        else:
-            sample_name = file_basename
-            for ext in [".fastq", ".fq"]:
-                if sample_name.endswith(ext):
-                    sample_name = sample_name[: -len(ext)]
-                    break
-
-        barcode_name = _extract_barcode_name(sample_name, log)
         report = FilterReport(sample_name=barcode_name)
 
         log("")
