@@ -6,6 +6,8 @@
 
 MaSTRspy is a GUI-based pipeline for forensic STR profiling from nanopore and long-read sequencing data. It accepts raw sequencing output (POD5, BAM, or FASTQ), filters reads for quality, aligns them to a 45-locus STR reference database (GRCh38), and produces per-sample allele calls, STR profiles, and plots.
 
+**Compatibility:** Verified on Linux and macOS.
+
 ## Installation
 
 ### Recommended — conda (installs everything at once)
