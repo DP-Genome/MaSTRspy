@@ -103,6 +103,10 @@ Then install the required external tools separately:
 
 > **Note:** dorado and xatlas are not available via conda. If you need basecalling (POD5 input) or SNV calling, install them manually from the links above. The pipeline will work without them — these features are simply skipped if the tools are not found.
 
+## Acknowledgements
+
+This tool was developed at the **Dubai Police Genome Center**. MaSTRspy is inspired by [STRspy](https://github.com/unique379r/strspy), and we thank its authors for their foundational work.
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
