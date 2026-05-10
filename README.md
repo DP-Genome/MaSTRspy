@@ -17,18 +17,18 @@ git clone https://github.com/DP-Genome/MaSTRspy.git
 cd MaSTRspy
 conda env create -f environment.yml
 conda activate mastrspy
-MaSTRspy setup
+mastrspy setup
 ```
 
 The `setup` command auto-detects all installed tools and writes their paths to `config/ToolsConfig.txt`.
-run MaSTRspy `setup` after installing Dorado for to activate basecalling through the GUI
+Run `mastrspy setup` again after installing Dorado or xatlas to activate those features.
 
 ## Usage
 
 Launch the GUI:
 
 ```bash
-MaSTRspy activate
+mastrspy activate
 ```
 
 The wizard guides you through the following steps:

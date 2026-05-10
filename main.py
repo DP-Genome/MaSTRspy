@@ -2,8 +2,8 @@
 """MaSTRspy - Smart STR Analysis Pipeline.
 
 CLI entry point.  Usage:
-    MaSTRspy activate   – launch the GUI
-    MaSTRspy setup      – auto-detect tools and write ToolsConfig.txt
+    mastrspy activate   – launch the GUI
+    mastrspy setup      – auto-detect tools and write ToolsConfig.txt
 """
 
 import argparse
@@ -65,7 +65,7 @@ def _setup(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="MaSTRspy",
+        prog="mastrspy",
         description="MaSTRspy - Smart STR Analysis Pipeline",
     )
     subparsers = parser.add_subparsers(dest="command")
