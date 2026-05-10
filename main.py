@@ -30,9 +30,6 @@ def _activate(args):
 
 def _setup(args):
     """Auto-detect installed tools and write their paths to ToolsConfig.txt."""
-    project_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(project_dir, "config", "ToolsConfig.txt")
-
     tools = {
         "BEDTOOLS": "bedtools",
         "MINIMAP": "minimap2",
@@ -52,10 +49,18 @@ def _setup(args):
             print(f"  [NOT FOUND] {name}: using bare name (must be on PATH)")
             lines.append(f"{key}={name}\n")
 
-    with open(config_path, "w") as f:
+    # Write to the installed package location (used by the GUI)
+    pkg_config = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config", "ToolsConfig.txt")
+    with open(pkg_config, "w") as f:
         f.writelines(lines)
+    print(f"\nToolsConfig.txt written to: {pkg_config}")
 
-    print(f"\nToolsConfig.txt written to: {config_path}")
+    # Also write to the local clone if the user is running from one
+    cwd_config = os.path.join(os.getcwd(), "config", "ToolsConfig.txt")
+    if os.path.exists(os.path.dirname(cwd_config)) and cwd_config != pkg_config:
+        with open(cwd_config, "w") as f:
+            f.writelines(lines)
+        print(f"ToolsConfig.txt also written to: {cwd_config}")
 
 
 def main():
