@@ -21,6 +21,7 @@ MaSTRspy setup
 ```
 
 The `setup` command auto-detects all installed tools and writes their paths to `config/ToolsConfig.txt`.
+run MaSTRspy `setup` after installing Dorado for to activate basecalling through the GUI
 
 ## Usage
 
