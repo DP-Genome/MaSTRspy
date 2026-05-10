@@ -91,8 +91,7 @@ def _collect_bam_samples(
             merged = Path(output_dir) / f"{barcode_dir}_merged.bam"
             log(f"[INFO] Merging {len(files)} chunk(s) for {barcode_dir}")
             subprocess.run(
-                [samtools_bin, "merge", "-f", str(merged)]
-                + [str(f) for f in files],
+                [samtools_bin, "merge", "-f", str(merged)] + [str(f) for f in files],
                 check=True,
                 stderr=subprocess.PIPE,
             )
