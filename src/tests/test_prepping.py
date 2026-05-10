@@ -1,6 +1,5 @@
 """Tests for src.pipeline.prepping module (barcode extraction logic)."""
 
-
 from src.pipeline.prepping import _extract_barcode_name
 
 

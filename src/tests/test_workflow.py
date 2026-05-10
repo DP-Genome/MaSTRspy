@@ -1,6 +1,5 @@
 """Tests for src.core.workflow module."""
 
-
 from src.core.file_detector import FileType
 from src.core.workflow import WorkflowManager, WorkflowStage
 
