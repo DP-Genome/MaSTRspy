@@ -1,0 +1,16 @@
+#"==========================================Inputs for STRspy==========================================================================="
+# Replace these paths with your own before running the CLI directly.
+# The GUI will auto-populate these values from your selections.
+INPUT_DIR=
+INPUT_BAM=yes
+READ_TYPE=ont
+STR_FASTA=
+STR_BED=
+GENOME_FASTA=
+REGION_BED=
+NORM_CUTOFF=0.1
+NORM_CUTOFF_OVERRIDES=
+OUTPUT_DIR=
+NUM_PARALLEL_JOBS=2
+NUM_THREADS=4
+ENABLE_SNV=no

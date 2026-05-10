@@ -1,0 +1,17 @@
+name: mastrspy
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - samtools>=1.19
+  - bedtools>=2.31
+  - minimap2>=2.26
+  - r-base>=4.3
+  - r-ggplot2
+  - r-viridis
+  - r-png
+  - pip
+  - pip:
+    - .

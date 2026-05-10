@@ -1,0 +1,45 @@
+name: Auto-fix Code Quality
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  auto-fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+    
+    - name: Set up Python
+      run: uv python install 3.11
+    
+    - name: Install dependencies
+      run: |
+        uv tool install black
+        uv tool install ruff
+    
+    - name: Run Black formatter
+      run: |
+        black src/    || true
+    
+    - name: Run Ruff auto-fix
+      run: |
+        ruff check src/ --fix --unsafe-fixes || true
+    
+    - name: Commit changes
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "🤖 Auto-fix: Apply black formatting and ruff fixes"
+        file_pattern: "src/"

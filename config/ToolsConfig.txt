@@ -1,0 +1,8 @@
+#"=========================================Tools global path=========================================================================="
+# Replace these paths with your own, or leave as-is if tools are on PATH.
+BEDTOOLS=bedtools
+MINIMAP=minimap2
+SAMTOOLS=samtools
+XATLAS=xatlas
+DORADO=dorado
+RSCRIPT=Rscript
