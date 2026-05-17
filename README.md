@@ -107,6 +107,15 @@ Then install the required external tools separately:
 
 This tool was developed at the **Dubai Police Genome Center**. MaSTRspy is inspired by [STRspy](https://github.com/unique379r/strspy), and we thank its authors for their foundational work.
 
+## Paper
+Title
+
+Mohammad S. Alsuwaidi<sup>1</sup>, Abdullah Albastaki<sup>1</sup>, Hanan Almulla<sup>1</sup>, Ahmed K. Omar<sup>1</sup>, Mohamed A. Almarri<sup>1,</sup><sup>2</sup>
+
+<sup>1</sup> Genome Center, General Department of Forensic Science and Criminology, Dubai Police GHQ, Dubai United Arab Emirates
+
+<sup>2</sup> College of Medicine, Mohammed Bin Rashid University of Medicine and Health Sciences, Dubai Health, Dubai, UAE
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
