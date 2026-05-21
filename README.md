@@ -74,11 +74,12 @@ The pipeline includes 45 STR loci mapped to GRCh38, available in both RefSeq and
 
 ## Filter Presets
 
+The filtering options could be modified easily in the GUI. Some filtering presers are preset for users.
 | Preset | Dorado QS | Mean Q | Min Length | Accuracy |
 |--------|-----------|--------|------------|----------|
-| Lenient | 8 | 8 | 100 bp | 0.80 |
-| Moderate | 10 | 10 | 200 bp | 0.85 |
-| Stringent | 12 | 12 | 300 bp | 0.90 |
+| Lenient | 8 | 8 | ## bp | 0.80 |
+| Moderate | 10 | 10 | ## bp | 0.85 |
+| Stringent | 12 | 12 | ## bp | 0.90 |
 
 ---
 
