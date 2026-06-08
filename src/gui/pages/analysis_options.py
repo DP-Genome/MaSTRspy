@@ -142,10 +142,10 @@ class AnalysisOptionsPage(QWidget):
         perf_layout.addWidget(thread_help)
 
         perf_layout.addSpacing(10)
-        self.snv_checkbox = QCheckBox("Enable SNV calling (xatlas)")
+        self.snv_checkbox = QCheckBox("Enable SNV calling (freebayes)")
         self.snv_checkbox.setChecked(False)
         self.snv_checkbox.setToolTip(
-            "Run xatlas to call SNVs within STR regions. "
+            "Run freebayes to call SNVs within STR regions. "
             "Does not affect STR genotyping results."
         )
         perf_layout.addWidget(self.snv_checkbox)

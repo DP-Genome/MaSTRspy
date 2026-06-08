@@ -12,7 +12,7 @@ REQUIRED_TOOLS = {
 }
 
 OPTIONAL_TOOLS = {
-    "xatlas": {"flag": "--help", "description": "SNV calling (optional)"},
+    "freebayes": {"flag": "--version", "description": "SNV calling (optional)"},
     "dorado": {"flag": "--version", "description": "Basecalling (POD5 input)"},
     "Rscript": {"flag": "--version", "description": "Plot generation (optional)"},
 }

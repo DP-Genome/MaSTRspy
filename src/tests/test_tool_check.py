@@ -51,7 +51,7 @@ class TestToolCheckResult:
         result = ToolCheckResult(
             available={},
             missing=["samtools", "bedtools", "minimap2"],
-            optional_missing=["xatlas", "dorado", "Rscript"],
+            optional_missing=["freebayes", "dorado", "Rscript"],
         )
         assert result.all_required_available is False
         assert len(result.missing) == 3
@@ -87,13 +87,13 @@ class TestCheckTool:
     @patch("src.core.tool_check.subprocess.run")
     @patch("src.core.tool_check.shutil.which")
     def test_tool_found_returns_version_from_stderr(self, mock_which, mock_run):
-        mock_which.return_value = "/usr/bin/xatlas"
+        mock_which.return_value = "/usr/bin/freebayes"
         mock_run.return_value = MagicMock(
             stdout="",
-            stderr="xatlas version 0.3\nUsage: xatlas [options]",
+            stderr="freebayes 1.3.7\nUsage: freebayes [options]",
         )
-        result = check_tool("xatlas", "--help")
-        assert result == "xatlas version 0.3"
+        result = check_tool("freebayes", "--version")
+        assert result == "freebayes 1.3.7"
 
     @patch("src.core.tool_check.subprocess.run")
     @patch("src.core.tool_check.shutil.which")
@@ -130,8 +130,8 @@ class TestCheckTool:
     @patch("src.core.tool_check.shutil.which")
     def test_custom_version_flag(self, mock_which):
         mock_which.return_value = None
-        check_tool("xatlas", version_flag="--help")
-        mock_which.assert_called_once_with("xatlas")
+        check_tool("freebayes", version_flag="--version")
+        mock_which.assert_called_once_with("freebayes")
 
 
 class TestCheckToolsConfig:
@@ -206,8 +206,8 @@ class TestCheckToolsConfig:
         assert "samtools" in call_args
         assert "bedtools" in call_args
         assert "minimap2" in call_args
-        # xatlas is now optional, but still checked
-        assert "xatlas" in call_args
+        # freebayes is now optional, but still checked
+        assert "freebayes" in call_args
 
 
 class TestRunPreflightCheck:
@@ -307,7 +307,7 @@ class TestRunPreflightCheck:
         expected = ToolCheckResult(
             available={"samtools": "1.18", "bedtools": "2.31", "minimap2": "2.26"},
             missing=[],
-            optional_missing=["xatlas", "dorado"],
+            optional_missing=["freebayes", "dorado"],
         )
         mock_check.return_value = expected
         result = run_preflight_check({})

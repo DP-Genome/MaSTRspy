@@ -34,7 +34,7 @@ def _setup(args):
         "BEDTOOLS": "bedtools",
         "MINIMAP": "minimap2",
         "SAMTOOLS": "samtools",
-        "XATLAS": "xatlas",
+        "FREEBAYES": "freebayes",
         "DORADO": "dorado",
         "RSCRIPT": "Rscript",
     }

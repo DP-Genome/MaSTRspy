@@ -38,8 +38,8 @@ def process_locus(
         bedtools (str): path to bedtools
         samtools (str): path to samtools
         minimap (str): path to minimap2
-        xatlas (str): path to xatlas
-        enable_snv (bool): whether to run xatlas SNV calling
+        freebayes (str): path to freebayes
+        enable_snv (bool): whether to run freebayes SNV calling
     """
     output_dir = config["output_dir"]
     str_fasta_dir = config["str_fasta"]
@@ -51,7 +51,7 @@ def process_locus(
     bedtools = config.get("bedtools", "bedtools")
     samtools = config.get("samtools", "samtools")
     minimap = config.get("minimap", "minimap2")
-    xatlas = config.get("xatlas", "xatlas")
+    freebayes = config.get("freebayes", "freebayes")
     enable_snv = config.get("enable_snv", False)
 
     bam_name = os.path.basename(sample_bam)
@@ -149,35 +149,28 @@ def process_locus(
             stderr=subprocess.PIPE,
         )
 
-        # Step 4: Call SNVs with xatlas (optional, non-fatal)
+        # Step 4: Call SNVs with freebayes (optional, non-fatal)
         if enable_snv:
-            log("## Step 4/5: Calling SNVs with xatlas...")
+            log("## Step 4/5: Calling SNVs with freebayes...")
             try:
                 snv_dir = os.path.join(output_dir, "SNVcalls")
                 os.makedirs(snv_dir, exist_ok=True)
                 snv_prefix = os.path.join(snv_dir, f"{bed_fname}_{bam_name}")
-                proc = subprocess.run(
-                    [
-                        xatlas,
-                        "-r",
-                        motif_fa,
-                        "-i",
-                        motif_mapped_sorted_bam,
-                        "-s",
-                        snv_prefix,
-                        "-p",
-                        snv_prefix,
-                    ],
-                    stderr=subprocess.PIPE,
-                    text=True,
-                )
+                vcf_path = snv_prefix + ".vcf"
+                with open(vcf_path, "w") as vcf_out:
+                    proc = subprocess.run(
+                        [freebayes, "-f", motif_fa, motif_mapped_sorted_bam],
+                        stdout=vcf_out,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                    )
                 if proc.returncode != 0:
                     log(
-                        f"[WARNING] xatlas failed for {bed_fname}/{bam_name}: "
+                        f"[WARNING] freebayes failed for {bed_fname}/{bam_name}: "
                         f"{proc.stderr.strip()}"
                     )
             except Exception as e:
-                log(f"[WARNING] xatlas skipped for {bed_fname}/{bam_name}: {e}")
+                log(f"[WARNING] freebayes skipped for {bed_fname}/{bam_name}: {e}")
         else:
             log("## Step 4/5: SNV calling skipped (disabled)")
 

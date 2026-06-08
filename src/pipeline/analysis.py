@@ -80,7 +80,7 @@ def run_analysis(
     bedtools = tools.get("BEDTOOLS", "bedtools")
     minimap = tools.get("MINIMAP", "minimap2")
     samtools = tools.get("SAMTOOLS", "samtools")
-    xatlas = tools.get("XATLAS", "xatlas")
+    freebayes = tools.get("FREEBAYES", "freebayes")
 
     # Load overrides
     overrides = load_overrides(norm_cutoff_overrides_path)
@@ -218,7 +218,7 @@ def run_analysis(
         "bedtools": bedtools,
         "samtools": samtools,
         "minimap": minimap,
-        "xatlas": xatlas,
+        "freebayes": freebayes,
         "enable_snv": enable_snv,
     }
 
