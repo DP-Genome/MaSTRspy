@@ -1,8 +1,7 @@
-#"=========================================Tools global path=========================================================================="
-# Replace these paths with your own, or leave as-is if tools are on PATH.
-BEDTOOLS=bedtools
-MINIMAP=minimap2
-SAMTOOLS=samtools
-XATLAS=xatlas
-DORADO=dorado
-RSCRIPT=Rscript
+#=========================================Tools global path==========================================
+BEDTOOLS=/opt/homebrew/Caskroom/miniforge/base/envs/mastrspy/bin/bedtools
+MINIMAP=/opt/homebrew/Caskroom/miniforge/base/envs/mastrspy/bin/minimap2
+SAMTOOLS=/opt/homebrew/Caskroom/miniforge/base/envs/mastrspy/bin/samtools
+FREEBAYES=/opt/homebrew/Caskroom/miniforge/base/envs/biotools/bin/freebayes
+DORADO=/opt/homebrew/bin/dorado
+RSCRIPT=/opt/homebrew/Caskroom/miniforge/base/envs/mastrspy/bin/Rscript

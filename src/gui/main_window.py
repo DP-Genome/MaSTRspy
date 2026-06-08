@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
 <h3>Analysis</h3>
 <b>STR Database:</b> {db_name}<br>
 <b>Norm Cutoff:</b> {p['norm_cutoff']:.2f}<br>
-<b>SNV Calling (xatlas):</b> {snv_status}<br>
+<b>SNV Calling (freebayes):</b> {snv_status}<br>
 """
 
         if p.get("norm_cutoff_overrides"):
