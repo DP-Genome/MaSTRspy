@@ -108,8 +108,10 @@ Then install the required external tools separately:
 
 This tool was developed at the **Dubai Police Genome Center**. MaSTRspy is inspired by [STRspy](https://github.com/unique379r/strspy), and we thank its authors for their foundational work.
 
-## Paper
-Title
+## Citation
+Benchmarking Nanopore Sequencing for Autosomal and Y-STR Profiling on R10.4.1 Flowcell across Basecalling Models
+
+https://www.biorxiv.org/content/10.64898/2026.07.10.737817v1.full
 
 Mohammad S. Alsuwaidi<sup>1</sup>, Abdullah Albastaki<sup>1</sup>, Hanan Almulla<sup>1</sup>, Ahmed K. Omar<sup>1</sup>, Mohamed A. Almarri<sup>1,</sup><sup>2</sup>
 
