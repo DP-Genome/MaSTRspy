@@ -111,7 +111,7 @@ This tool was developed at the **Dubai Police Genome Center**. MaSTRspy is inspi
 ## Citation
 Benchmarking Nanopore Sequencing for Autosomal and Y-STR Profiling on R10.4.1 Flowcell across Basecalling Models
 
-https://www.biorxiv.org/content/10.64898/2026.07.10.737817v1.full
+https://www.fsigenetics.com/article/S1872-4973(26)00225-5/
 
 Mohammad S. Alsuwaidi<sup>1</sup>, Abdullah Albastaki<sup>1</sup>, Hanan Almulla<sup>1</sup>, Ahmed K. Omar<sup>1</sup>, Mohamed A. Almarri<sup>1,</sup><sup>2</sup>
 
