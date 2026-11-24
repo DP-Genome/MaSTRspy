@@ -23,6 +23,28 @@ mastrspy setup
 The `setup` command auto-detects all installed tools and writes their paths to `config/ToolsConfig.txt`.
 Run `mastrspy setup` again after installing Dorado to activate basecalling.
 
+### Reference genome
+
+MaSTRspy does not include a human reference genome. POD5, FASTQ and unaligned BAM input is aligned to GRCh38, so you need a GRCh38 reference indexed with minimap2 (`.mmi`). You select this file on the Analysis Options page.
+
+Use the reference whose chromosome names match the STR database you plan to select:
+
+| STR database | Chromosome names | Reference |
+|--------------|------------------|-----------|
+| UCSC | `chr1` … `chrY` | [hg38 analysis set (UCSC)](https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/analysisSet/) |
+| RefSeq | `NC_000001.11` … `NC_000024.10` | [GRCh38.p14, GCF_000001405.40 (NCBI)](https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/) |
+
+Download the reference and build the index once (example for the UCSC database):
+
+```bash
+curl -LO https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/analysisSet/hg38.analysisSet.fa.gz
+minimap2 -x map-ont -d hg38.analysisSet.mmi hg38.analysisSet.fa.gz
+```
+
+For the RefSeq database, do the same with `GCF_000001405.40_GRCh38.p14_genomic.fna.gz` from the NCBI link above.
+
+The index file is about 7 GB, and building it needs about 11 GB of memory.
+
 ## Usage
 
 Launch the GUI:
