@@ -8,6 +8,7 @@ import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable, Dict, List, Tuple
 
+from src.core.config import normalize_locus_name
 from src.pipeline.allele_parser import (
     call_zygosity,
     detect_stutter,
@@ -189,7 +190,7 @@ def _generate_barcode_outputs(
 
         for fname in allele_files:
             locus_name = _extract_locus_from_filename(fname)
-            effective_cutoff = overrides.get(locus_name, norm_cutoff)
+            effective_cutoff = overrides.get(normalize_locus_name(locus_name), norm_cutoff)
             fpath = os.path.join(barcode_path, fname)
             total_loci += 1
 

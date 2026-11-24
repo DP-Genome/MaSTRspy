@@ -108,7 +108,8 @@ class TestLoadOverrides:
     def test_loads_locus_cutoffs(self, sample_overrides_tsv):
         overrides = load_overrides(sample_overrides_tsv)
         assert overrides["D3S1358"] == 0.4
-        assert overrides["vWA"] == 0.4
+        assert overrides["VWA"] == 0.4  # keys are normalised to upper case
+        assert "vWA" not in overrides
         assert overrides["DYS481"] == 0.5
 
     def test_returns_empty_dict_for_empty_path(self):

@@ -101,13 +101,19 @@ def process_locus(
             if proc.returncode != 0:
                 raise RuntimeError(f"bedtools intersect failed: {proc.stderr}")
 
-        proc = subprocess.run(
-            [bedtools, "bamtofastq", "-i", intersected_bam, "-fq", intersected_fq],
-            stderr=subprocess.PIPE,
-            text=True,
-        )
+        # NOTE: `bedtools bamtofastq` (v2.31) writes every BAM record to the FASTQ
+        # twice, which doubled every downstream read count. `samtools fastq` emits
+        # each record once; -F 2308 drops unmapped/secondary/supplementary records
+        # so a read is never emitted more than once.
+        with open(intersected_fq, "w") as fq_out:
+            proc = subprocess.run(
+                [samtools, "fastq", "-F", "2308", intersected_bam],
+                stdout=fq_out,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
         if proc.returncode != 0:
-            raise RuntimeError(f"bedtools bamtofastq failed: {proc.stderr}")
+            raise RuntimeError(f"samtools fastq failed: {proc.stderr}")
 
         # Step 2: Map extracted reads to the STR motif reference
         log("## Step 2/5: Mapping extracted reads to STR motif reference...")

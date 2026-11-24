@@ -74,6 +74,11 @@ def load_tools_config(path: str) -> Dict[str, str]:
     return load_input_config(path)
 
 
+def normalize_locus_name(name: str) -> str:
+    """Canonical locus key for cutoff overrides: trimmed and upper-cased."""
+    return name.strip().upper()
+
+
 def load_overrides(path: str) -> Dict[str, float]:
     """Load per-locus normalization cutoff overrides from a TSV file.
 
@@ -89,7 +94,10 @@ def load_overrides(path: str) -> Dict[str, float]:
                 continue
             parts = line.split("\t")
             if len(parts) >= 2:
-                locus = parts[0].strip()
+                # Locus names in the pipeline come from the database file names
+                # (e.g. VWA, PENTAD, PENTAE); the TSV may use vWA/PentaD/PentaE.
+                # Store keys upper-cased so lookups are case-insensitive.
+                locus = normalize_locus_name(parts[0])
                 try:
                     cutoff = float(parts[1].strip())
                     overrides[locus] = cutoff
