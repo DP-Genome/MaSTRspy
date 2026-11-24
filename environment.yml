@@ -8,6 +8,7 @@ dependencies:
   - samtools>=1.19
   - bedtools>=2.31
   - minimap2>=2.26
+  - freebayes>=1.3.9
   - r-base>=4.3
   - r-ggplot2
   - r-viridis
