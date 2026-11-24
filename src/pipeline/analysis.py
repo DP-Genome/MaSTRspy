@@ -13,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+from src import __version__
 from src.core.checkpoint import CheckpointManager
 from src.core.config import (
     load_input_config,
@@ -100,7 +101,7 @@ def run_analysis(
 
     log("Configurations loaded successfully.")
     log("========================================================")
-    log("Arguments are valid. Starting MaSTRspy P1.0 analysis.")
+    log(f"Arguments are valid. Starting MaSTRspy v{__version__} analysis.")
     log("========================================================")
     log(f"Input read dir: {input_dir}")
     log(f"Input type: {'bam' if input_bam == 'yes' else 'fastq'}")

@@ -16,11 +16,12 @@ def _activate(args):
     """Launch the PySide6 GUI application."""
     from PySide6.QtWidgets import QApplication
 
+    from src import __version__
     from src.gui.main_window import MainWindow
 
     app = QApplication(sys.argv)
     app.setApplicationName("MaSTRspy")
-    app.setApplicationVersion("P1.0")
+    app.setApplicationVersion(__version__)
 
     window = MainWindow()
     window.show()

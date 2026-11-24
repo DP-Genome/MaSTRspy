@@ -11,6 +11,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Callable, Dict, List
 
+from src import __version__
 from src.filters.bam_accuracy import filter_bam_by_accuracy
 from src.filters.dorado_qs import filter_bam_by_qs, filter_fastq_by_qs
 from src.filters.fastq_quality import filter_fastq
@@ -163,7 +164,7 @@ def run_prepping(
     filter_reports: List[FilterReport] = []
 
     log("========================================")
-    log("MaSTR_Prepping P1.0 Started")
+    log(f"MaSTR_Prepping v{__version__} Started")
     log("========================================")
     log(f"Input directory: {input_dir}")
     log(f"Output directory: {output_dir}")
@@ -280,7 +281,7 @@ def run_prepping(
 
     log("")
     log("========================================")
-    log("MaSTR_Prepping P1.0 Finished")
+    log(f"MaSTR_Prepping v{__version__} Finished")
     log(f"Prepped files are in: {output_dir}")
     log("========================================")
 
