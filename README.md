@@ -21,7 +21,7 @@ mastrspy setup
 ```
 
 The `setup` command auto-detects all installed tools and writes their paths to `config/ToolsConfig.txt`.
-Run `mastrspy setup` again after installing Dorado or xatlas to activate those features.
+Run `mastrspy setup` again after installing Dorado to activate basecalling.
 
 ## Usage
 
@@ -99,10 +99,10 @@ Then install the required external tools separately:
 | [bedtools](https://bedtools.readthedocs.io/) | Genomic intervals | Yes |
 | [minimap2](https://github.com/lh3/minimap2) | Read alignment | Yes |
 | [dorado](https://github.com/nanoporetech/dorado) | Basecalling (POD5 input only) | Optional |
-| [xatlas](https://github.com/broadinstitute/xatlas) | SNV calling | Optional |
+| [freebayes](https://github.com/freebayes/freebayes) | SNV calling | Optional |
 | [Rscript](https://www.r-project.org/) | Profile plots | Optional |
 
-> **Note:** dorado and xatlas are not available via conda. If you need basecalling (POD5 input) or SNV calling, install them manually from the links above. The pipeline will work without them — these features are simply skipped if the tools are not found.
+> **Note:** dorado is not available via conda. If you need basecalling (POD5 input), install it manually from the link above. freebayes is installed by the conda environment; with a manual installation, install it separately if you need SNV calling. The pipeline will work without them — these features are simply skipped if the tools are not found.
 
 ## Acknowledgements
 
