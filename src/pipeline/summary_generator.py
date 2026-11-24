@@ -190,7 +190,9 @@ def _generate_barcode_outputs(
 
         for fname in allele_files:
             locus_name = _extract_locus_from_filename(fname)
-            effective_cutoff = overrides.get(normalize_locus_name(locus_name), norm_cutoff)
+            effective_cutoff = overrides.get(
+                normalize_locus_name(locus_name), norm_cutoff
+            )
             fpath = os.path.join(barcode_path, fname)
             total_loci += 1
 

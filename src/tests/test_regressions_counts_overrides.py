@@ -6,7 +6,7 @@
    (VWA, PENTAD, PENTAE) while overrides.tsv used vWA/PentaD/PentaE, so those
    loci silently fell back to the global cutoff.
 """
-import os
+
 import subprocess
 from unittest import mock
 
@@ -35,14 +35,20 @@ def test_read_extraction_uses_samtools_fastq_not_bedtools_bamtofastq(tmp_path):
 
     bed = tmp_path / "TPOX.bed"
     bed.write_text("chr2\t1\t2\tTPOX\n")
-    with mock.patch.object(subprocess, "run", side_effect=fake_run), mock.patch.object(
-        subprocess, "Popen", side_effect=fake_popen
+    with (
+        mock.patch.object(subprocess, "run", side_effect=fake_run),
+        mock.patch.object(subprocess, "Popen", side_effect=fake_popen),
     ):
         locus_processor.process_locus(
             str(tmp_path / "barcode10_prepped.bam"),
             str(bed),
-            {"output_dir": str(tmp_path / "out"), "str_fasta": str(tmp_path),
-             "bedtools": "bedtools", "samtools": "samtools", "minimap": "minimap2"},
+            {
+                "output_dir": str(tmp_path / "out"),
+                "str_fasta": str(tmp_path),
+                "bedtools": "bedtools",
+                "samtools": "samtools",
+                "minimap": "minimap2",
+            },
             temp_dir=str(tmp_path / "tmp"),
             log=lambda *_: None,
         )
@@ -55,9 +61,20 @@ def test_override_keys_match_file_derived_locus_names(tmp_path):
     tsv = tmp_path / "overrides.tsv"
     tsv.write_text("vWA\t0.4\nPentaD\t0.4\nPentaE\t0.4\nDYS481\t0.5\nDYS385a\t0.4\n")
     ov = load_overrides(str(tsv))
-    for fname in ["VWA_barcode10_prepped.bam_Allele_freqs.txt",
-                  "PENTAD_barcode10_prepped.bam_Allele_freqs.txt",
-                  "PENTAE_barcode10_prepped.bam_Allele_freqs.txt"]:
+    for fname in [
+        "VWA_barcode10_prepped.bam_Allele_freqs.txt",
+        "PENTAD_barcode10_prepped.bam_Allele_freqs.txt",
+        "PENTAE_barcode10_prepped.bam_Allele_freqs.txt",
+    ]:
         locus = _extract_locus_from_filename(fname)
         assert ov.get(normalize_locus_name(locus)) == 0.4, (fname, locus, ov)
-    assert ov[normalize_locus_name(_extract_locus_from_filename("DYS481_barcode10_prepped.bam_Allele_freqs.txt"))] == 0.5
+    assert (
+        ov[
+            normalize_locus_name(
+                _extract_locus_from_filename(
+                    "DYS481_barcode10_prepped.bam_Allele_freqs.txt"
+                )
+            )
+        ]
+        == 0.5
+    )
